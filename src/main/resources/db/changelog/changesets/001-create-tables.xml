@@ -1,0 +1,60 @@
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.3.xsd">
+
+    <changeSet id="1" author="TrusovMaxim">
+        <createTable tableName="user_bot">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="chat_id" type="BIGINT"/>
+            <column name="user_name" type="VARCHAR(255)"/>
+            <column name="first_name" type="VARCHAR(255)"/>
+            <column name="last_name" type="VARCHAR(255)"/>
+            <column name="last_bot_state" type="VARCHAR(255)"/>
+            <column name="setting_translator" type="VARCHAR(255)"/>
+            <column name="setting_image" type="VARCHAR(255)"/>
+            <column name="created_at" type="TIMESTAMP"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="2" author="TrusovMaxim">
+        <createTable tableName="user_data">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="data" type="TEXT"/>
+            <column name="count_data" type="BIGINT"/>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="user_data"
+                                 baseColumnNames="user_id"
+                                 referencedTableName="user_bot"
+                                 referencedColumnNames="id"
+                                 constraintName="user_data_user_id_fkey"/>
+    </changeSet>
+
+    <changeSet id="3" author="TrusovMaxim">
+        <createTable tableName="user_feedback">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="feedback" type="VARCHAR(255)"/>
+            <column name="created_at" type="TIMESTAMP"/>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="user_feedback"
+                                 baseColumnNames="user_id"
+                                 referencedTableName="user_bot"
+                                 referencedColumnNames="id"
+                                 constraintName="user_feedback_user_id_fkey"/>
+    </changeSet>
+
+</databaseChangeLog>

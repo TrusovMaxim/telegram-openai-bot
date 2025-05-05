@@ -1,0 +1,15 @@
+package ru.trusov.openai.telegrambot;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.openfeign.EnableFeignClients;
+import org.springframework.context.annotation.PropertySource;
+
+@SpringBootApplication
+@EnableFeignClients
+@PropertySource("classpath:application-secret.properties")
+public class OpenAiTelegramBotApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(OpenAiTelegramBotApplication.class, args);
+    }
+}
