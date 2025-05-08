@@ -7,7 +7,6 @@ import org.springframework.context.annotation.PropertySource;
 
 @SpringBootApplication
 @EnableFeignClients
-@PropertySource("classpath:application-secret.properties")
 public class OpenAiTelegramBotApplication {
     public static void main(String[] args) {
         SpringApplication.run(OpenAiTelegramBotApplication.class, args);

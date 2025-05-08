@@ -17,7 +17,7 @@ public class DownloadFileVoice {
         var sourceFileName = "src/main/resources/audio/" + chatId + "audio.oga";
         var targetFileName = "src/main/resources/audio/" + chatId + "audio.mp3";
         FileUtils.copyURLToFile(new URL(urlVoice), new File(sourceFileName));
-        var converterFile = new ConverterFile("src/main/resources/ffmpeg");
+        var converterFile = new ConverterFile("ffmpeg");
         converterFile.convertOgaToMp3(sourceFileName, targetFileName);
         Files.delete(Path.of(sourceFileName));
         return targetFileName;
