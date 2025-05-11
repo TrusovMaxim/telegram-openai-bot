@@ -8,8 +8,8 @@ OpenAiTelegramBot — это телеграм-бот, использующий O
 ## 🔧 Технологии и версии
 
 | Технология             | Версия   |
-| ---------------------- | -------- |
-| Java                   | 24       |
+| ---------------------- |----------|
+| Java                   | 21       |
 | Spring Boot            | 3.4.5    |
 | Spring Cloud OpenFeign | 4.2.1    |
 | TelegramBots           | 6.9.7.1  |
@@ -96,7 +96,26 @@ cp src/main/resources/application-example.properties src/main/resources/applicat
 1. Скопируй `application-example.properties` → `application-secret.properties`
 2. Заполни нужные значения (ключи Telegram и OpenAI, пароль к БД)
 3. Убедись, что PostgreSQL запущен и создана база `telegram_openai_bot`
-4. Запусти проект:
+4. Убедись, что установлен ffmpeg (**только для macOS**, если ещё не установлен):
+
+### 🛠 Установка ffmpeg на macOS
+
+```bash
+# Установи Command Line Tools (если ещё не установлены)
+xcode-select --install
+
+# Установи Homebrew (если ещё не установлен)
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+# Добавь brew в PATH (только один раз)
+echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile
+eval "$(/opt/homebrew/bin/brew shellenv)"
+
+# Установи ffmpeg
+brew install ffmpeg
+```
+
+5. Запусти проект:
 
 ```bash
 ./mvnw spring-boot:run
