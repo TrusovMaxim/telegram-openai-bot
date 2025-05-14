@@ -20,6 +20,7 @@ public class ChatGptProcessor {
     private final UserService userService;
     private final UserDataService userDataService;
     private final MessageSenderService messageSenderService;
+    private static final int MAX_DIALOG_LENGTH = 40000;
 
     public void process(User user, Long chatId, String text, UserActionPathEnum action) {
         if (action == null) {
@@ -77,7 +78,14 @@ public class ChatGptProcessor {
             userDataService.createData(user, "");
             data = userDataService.findByUser(user);
         }
-        var updatedData = (data.getData() == null ? "" : data.getData() + "\n") + "User: " + userText;
+        var currentData = data.getData();
+        var updatedData = (currentData == null ? "" : currentData + "\n") + "User: " + userText;
+        if (updatedData.length() > MAX_DIALOG_LENGTH) {
+            data.setData(null);
+            data.setCountData(0L);
+            userDataService.save(data);
+            return BotWarnings.WARNING_DIALOG_TOO_LONG;
+        }
         var answer = OpenAIClient.runOpenAI(updatedData);
         updatedData += "\nBot: " + answer;
         data.setData(updatedData);
