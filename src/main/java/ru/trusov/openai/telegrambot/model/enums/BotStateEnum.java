@@ -5,5 +5,6 @@ public enum BotStateEnum {
     TRANSLATOR,
     CHAT_GPT,
     FEEDBACK,
-    IMAGE
+    IMAGE,
+    YOUTUBE
 }

@@ -50,6 +50,10 @@ public class ImageProcessor {
                 userDataService.resetUserDialog(user);
                 messageSenderService.send(BotSectionState.STATE_CHAT_GPT_DIALOG_RESET + BotSectionState.STATE_CHAT_SWITCHED_TO_GPT, chatId);
             }
+            case YOUTUBE -> {
+                userService.updateBotStateEnum(user, BotStateEnum.YOUTUBE);
+                messageSenderService.send(BotSectionState.STATE_CHAT_SWITCHED_TO_YOUTUBE, chatId);
+            }
             case INFO -> {
                 userService.updateBotStateEnum(user, BotStateEnum.CHAT_GPT);
                 messageSenderService.send(BotMessages.MESSAGE_INFO_INTRO, chatId);

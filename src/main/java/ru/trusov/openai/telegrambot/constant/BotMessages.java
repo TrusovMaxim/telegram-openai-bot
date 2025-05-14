@@ -13,6 +13,7 @@ public interface BotMessages {
             •/gpt - Чат с GPT.
             •/gpt_reset - Сброс диалога.
             •/translator - Голос в текст.
+            •/youtube - Краткий обзор YouTube-видео.
             •/setting_voice - Модель перевода голоса.
             •/image - Генерация изображений.
             •/setting_image - Размер изображения.
@@ -20,8 +21,8 @@ public interface BotMessages {
             •/info - О проекте.
             •/feedback - Обратная связь.
             \nДоступны команды через кнопки:
-            «About author» — Информация об авторе.
-            «Donate» — Поддержать развитие проекта.
+            «Об авторе» — Информация об авторе.
+            «Донат» — Поддержать развитие проекта.
             \nВыберите подходящую команду из меню.
             """;
     String MESSAGE_ABOUT_AUTHOR = """

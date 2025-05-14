@@ -4,9 +4,12 @@ public interface BotSectionState {
     String STATE_CHAT_ALREADY_ACTIVATED = "Чат уже активирован. Пожалуйста, напишите запрос.";
     String STATE_CHAT_ALREADY_IN_SECTION = "Вы уже находитесь в этом разделе бота.";
     String STATE_CHAT_SWITCHED_TO_GPT = "Вы перешли на chatGPT. Лимит запоминания диалога 15 сообщений. Можно сделать принудительный сброс через команду.";
+    String STATE_CHAT_SWITCHED_TO_YOUTUBE = "Вы перешли в режим YouTube. Пришлите ссылку на видео — я сделаю для вас краткое резюме. Обрабатываются первые ~15 минут.";
     String STATE_CHAT_GPT_DIALOG_RESET = "Вы сделали сброс диалога с чатом GPT.\n\n";
     String STATE_REQUEST_SENT = "Запрос был отправлен. Пожалуйста, подождите ответа.";
     String STATE_REQUEST_IMAGE_SENT = "Запрос на генерацию изображения был отправлен. Пожалуйста, дождитесь ответа. Генерация занимает некоторое время.";
+    String STATE_YOUTUBE_SUBTITLE_LOADING = "Обрабатываю видео с YouTube. Подождите немного...";
+    String STATE_YOUTUBE_SUMMARIZING = "Формирую краткую выжимку из видео. Почти готово...";
     String STATE_CHOICE_TRANSLATION_PROMPT = """
             Пожалуйста, выберите перевод:
             \nTranscription — транскрибирует аудио на язык ввода.

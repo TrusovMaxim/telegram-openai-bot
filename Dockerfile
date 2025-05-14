@@ -6,8 +6,11 @@ RUN mvn clean package -DskipTests
 FROM eclipse-temurin:21-jdk
 WORKDIR /app
 
-# УСТАНОВКА FFMPEG в финальном образе
-RUN apt-get update && apt-get install -y ffmpeg
+# УСТАНОВКА FFMPEG и YT-DLP в финальном образе
+RUN apt-get update && \
+    apt-get install -y ffmpeg curl && \
+    curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp && \
+    chmod +x /usr/local/bin/yt-dlp
 
 COPY --from=builder /app/target/telegram-openai-bot-0.0.1-SNAPSHOT.jar app.jar
 CMD ["java", "-jar", "app.jar"]

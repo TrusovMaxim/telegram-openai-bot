@@ -1,48 +1,46 @@
 package ru.trusov.openai.telegrambot.telegram.processor;
 
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import org.telegram.telegrambots.meta.api.objects.Voice;
 import ru.trusov.openai.telegrambot.constant.BotErrors;
 import ru.trusov.openai.telegrambot.constant.BotMessages;
 import ru.trusov.openai.telegrambot.constant.BotPrompts;
 import ru.trusov.openai.telegrambot.constant.BotSectionState;
 import ru.trusov.openai.telegrambot.model.entity.User;
 import ru.trusov.openai.telegrambot.model.enums.BotStateEnum;
-import ru.trusov.openai.telegrambot.model.enums.TranslatorTypeEnum;
 import ru.trusov.openai.telegrambot.model.enums.UserActionPathEnum;
 import ru.trusov.openai.telegrambot.service.bot.MessageSenderService;
-import ru.trusov.openai.telegrambot.service.bot.TranslatorService;
+import ru.trusov.openai.telegrambot.service.openai.impl.OpenAIClientApiServiceImpl;
 import ru.trusov.openai.telegrambot.service.user.UserDataService;
 import ru.trusov.openai.telegrambot.service.user.UserService;
+import ru.trusov.openai.telegrambot.service.youtube.YoutubeSubtitleService;
 
+@Slf4j
 @Component
-@AllArgsConstructor
-public class TranslatorProcessor {
+@RequiredArgsConstructor
+public class YoutubeProcessor {
     private final UserService userService;
     private final UserDataService userDataService;
     private final MessageSenderService messageSenderService;
-    private final TranslatorService translatorService;
+    private final YoutubeSubtitleService subtitleService;
+    private final OpenAIClientApiServiceImpl openAIClientApiService;
 
-    public void process(User user, Voice voice, Long chatId) {
-        if (voice.getDuration() > 600) {
-            messageSenderService.send(BotErrors.ERROR_VOICE_MESSAGE_TOO_LONG, chatId);
-        } else if (user.getSettingTranslator() == null) {
-            userService.updateBotStateEnum(user, BotStateEnum.TRANSLATOR);
-            messageSenderService.sendTranslatorPrompt(chatId);
-        } else {
-            String responseText = translatorService.translate(user.getSettingTranslator(), voice.getFileId(), chatId);
-            messageSenderService.send(responseText, chatId);
-        }
-    }
-
-    public void process(User user, Long chatId, UserActionPathEnum action) {
+    public void process(User user, Long chatId, String text, UserActionPathEnum action) {
         if (action == null) {
-            messageSenderService.send(BotPrompts.PROMPT_VOICE_REQUIRED, chatId);
+            handleYoutubeUrl(chatId, text);
             return;
         }
         switch (action) {
-            case TRANSLATOR -> messageSenderService.send(BotSectionState.STATE_CHAT_ALREADY_IN_SECTION, chatId);
+            case YOUTUBE -> messageSenderService.send(BotSectionState.STATE_CHAT_ALREADY_IN_SECTION, chatId);
+            case TRANSLATOR -> {
+                userService.updateBotStateEnum(user, BotStateEnum.TRANSLATOR);
+                if (user.getSettingTranslator() == null) {
+                    messageSenderService.sendTranslatorPrompt(chatId);
+                } else {
+                    messageSenderService.send(BotPrompts.PROMPT_VOICE_SEND, chatId);
+                }
+            }
             case CHAT_GPT -> {
                 userService.updateBotStateEnum(user, BotStateEnum.CHAT_GPT);
                 messageSenderService.send(BotSectionState.STATE_CHAT_SWITCHED_TO_GPT, chatId);
@@ -60,10 +58,6 @@ public class TranslatorProcessor {
                     messageSenderService.send(BotPrompts.PROMPT_IMAGE_DESCRIPTION_REQUEST, chatId);
                 }
             }
-            case YOUTUBE -> {
-                userService.updateBotStateEnum(user, BotStateEnum.YOUTUBE);
-                messageSenderService.send(BotSectionState.STATE_CHAT_SWITCHED_TO_YOUTUBE, chatId);
-            }
             case INFO -> {
                 userService.updateBotStateEnum(user, BotStateEnum.CHAT_GPT);
                 messageSenderService.send(BotMessages.MESSAGE_INFO_INTRO, chatId);
@@ -80,12 +74,29 @@ public class TranslatorProcessor {
         }
     }
 
-    public void setMode(User user, Long chatId, Integer messageId, TranslatorTypeEnum type) {
-        userService.updateSettingTranslatorEnum(user, type);
-        userService.updateBotStateEnum(user, BotStateEnum.TRANSLATOR);
-        var msg = (type == TranslatorTypeEnum.TRANSLATION)
-                ? BotSectionState.STATE_CHOICE_TRANSLATION_RESPONSE
-                : BotSectionState.STATE_CHOICE_TRANSCRIPTION_RESPONSE;
-        messageSenderService.edit(msg, chatId, messageId);
+    public void handleYoutubeUrl(Long chatId, String messageText) {
+        if (!isValidYoutubeUrl(messageText)) {
+            messageSenderService.send(BotErrors.ERROR_YOUTUBE_INVALID_URL, chatId);
+            return;
+        }
+        try {
+            var url = messageText.replace("/youtube", "").trim();
+            messageSenderService.send(BotSectionState.STATE_YOUTUBE_SUBTITLE_LOADING, chatId);
+            var subtitles = subtitleService.extractSubtitles(url, chatId);
+            if (subtitles == null || subtitles.isBlank()) {
+                messageSenderService.send(BotErrors.ERROR_YOUTUBE_SUBTITLE_NOT_FOUND, chatId);
+                return;
+            }
+            messageSenderService.send(BotSectionState.STATE_YOUTUBE_SUMMARIZING, chatId);
+            var summary = openAIClientApiService.summarizeText(subtitles);
+            messageSenderService.send(summary, chatId);
+        } catch (Exception e) {
+            log.error("Ошибка при обработке YouTube-видео: {}", e.getMessage(), e);
+            messageSenderService.send(BotErrors.ERROR_YOUTUBE_PROCESSING, chatId);
+        }
+    }
+
+    private boolean isValidYoutubeUrl(String url) {
+        return url != null && (url.contains("youtu.be/") || url.contains("youtube.com/watch?v="));
     }
 }

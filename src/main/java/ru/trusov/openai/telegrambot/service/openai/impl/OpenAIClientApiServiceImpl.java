@@ -1,8 +1,10 @@
 package ru.trusov.openai.telegrambot.service.openai.impl;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import ru.trusov.openai.telegrambot.constant.BotPrompts;
 import ru.trusov.openai.telegrambot.model.common.Message;
 import ru.trusov.openai.telegrambot.model.request.*;
 import ru.trusov.openai.telegrambot.model.response.ChatGPTResponse;
@@ -12,6 +14,7 @@ import ru.trusov.openai.telegrambot.service.openai.OpenAIClientApiService;
 
 import java.util.Collections;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class OpenAIClientApiServiceImpl {
@@ -52,5 +55,28 @@ public class OpenAIClientApiServiceImpl {
                 .messages(Collections.singletonList(message))
                 .build();
         return openAIClientApiService.chat(chatGPTRequest);
+    }
+
+    public String summarizeText(String subtitles) {
+        var prompt = BotPrompts.PROMPT_SUMMARIZE_YOUTUBE;
+        if (subtitles.length() > 30000) {
+            log.warn("Субтитры слишком длинные: {} символов. Обрезаем до 40000.", subtitles.length());
+            subtitles = subtitles.substring(0, 30000);
+        }
+        var fullPrompt = prompt + "\n\n" + subtitles;
+        var chatRequest = ChatRequest.builder()
+                .question(fullPrompt)
+                .build();
+        try {
+            var response = chat(chatRequest);
+            if (response == null || response.getChoiceResponses() == null || response.getChoiceResponses().isEmpty()) {
+                log.warn("OpenAI не вернул ответ на запрос summarizeText");
+                throw new RuntimeException("Ошибка получения ответа от OpenAI");
+            }
+            return response.getChoiceResponses().getFirst().getMessage().getContent().trim();
+        } catch (Exception e) {
+            log.error("Ошибка при генерации краткого обзора: {}", e.getMessage(), e);
+            throw new RuntimeException("Не удалось получить краткий обзор видео");
+        }
     }
 }

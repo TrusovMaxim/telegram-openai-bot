@@ -51,6 +51,10 @@ public class ChatGptProcessor {
                     messageSenderService.send(BotPrompts.PROMPT_IMAGE_DESCRIPTION_REQUEST, chatId);
                 }
             }
+            case YOUTUBE -> {
+                userService.updateBotStateEnum(user, BotStateEnum.YOUTUBE);
+                messageSenderService.send(BotSectionState.STATE_CHAT_SWITCHED_TO_YOUTUBE, chatId);
+            }
             case INFO -> {
                 userService.updateBotStateEnum(user, BotStateEnum.CHAT_GPT);
                 messageSenderService.send(BotMessages.MESSAGE_INFO_INTRO, chatId);

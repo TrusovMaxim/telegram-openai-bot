@@ -1,5 +1,6 @@
 package ru.trusov.openai.telegrambot.model.response;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -12,6 +13,7 @@ public class ChatGPTResponse implements Serializable {
     private String object;
     private String model;
     private LocalDate created;
+    @JsonProperty("choices")
     private List<ChoiceResponse> choiceResponses;
     private UsageResponse usageResponse;
 }

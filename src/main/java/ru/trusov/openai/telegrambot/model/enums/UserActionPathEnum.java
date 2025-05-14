@@ -17,6 +17,7 @@ public enum UserActionPathEnum {
     COMMANDS("/commands"),
     IMAGE("/image"),
     SETTING_IMAGE("/setting_image"),
+    YOUTUBE("/youtube"),
     DONATE("Донат"),
     ABOUT_AUTHOR("Об авторе");
 
