@@ -120,4 +120,23 @@ public class MessageSenderService {
             send(BotErrors.ERROR_PAYMENT_FAILED, chatId);
         }
     }
+
+    public void sendImageInvoice(Long chatId) {
+        var prices = List.of(new LabeledPrice("5 генераций изображений", 149_00));
+        var invoice = new SendInvoice();
+        invoice.setChatId(chatId);
+        invoice.setTitle("Токены для изображений");
+        invoice.setDescription("5 генераций изображений (1 изображение = 1 токен)");
+        invoice.setPayload("image-tokens-5");
+        invoice.setProviderToken(providerToken);
+        invoice.setCurrency("RUB");
+        invoice.setPrices(prices);
+        invoice.setStartParameter("buy_images");
+        try {
+            telegramBot.execute(invoice);
+        } catch (TelegramApiException e) {
+            log.error("Ошибка при отправке инвойса на изображения: {}", e.getMessage(), e);
+            send(BotErrors.ERROR_IMAGE_PAYMENT_FAILED, chatId);
+        }
+    }
 }

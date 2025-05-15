@@ -59,7 +59,7 @@ OpenAiTelegramBot — это телеграм-бот на Java (Spring Boot), о
 | `/translator`    | Перевод голосовых сообщений                     |
 | `/youtube`       | Краткий обзор YouTube-видео (до 15 минут)       |
 | `/image`         | Генерация изображений (1 изображение = 1 токен) |
-| `/buy_images`    | Пополнить баланс: 10 генераций за 99₽           |
+| `/buy_images`    | Пополнить баланс: 5 генераций за 149₽           |
 | `/balance`       | Проверить баланс токенов                        |
 | `/setting_voice` | Настроить режим голосового перевода             |
 | `/setting_image` | Настроить размер изображений                    |
@@ -85,7 +85,7 @@ OpenAiTelegramBot — это телеграм-бот на Java (Spring Boot), о
    /translator - Перевод голосовых
    /youtube - Обзор YouTube-видео
    /image - Генерация изображений
-   /buy_images - Купить 10 токенов
+   /buy_images - Купить 5 токенов
    /balance - Баланс токенов
    /setting_voice - Режим перевода
    /setting_image - Размер изображения

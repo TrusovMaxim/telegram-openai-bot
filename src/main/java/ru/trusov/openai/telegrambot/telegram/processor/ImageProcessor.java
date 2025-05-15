@@ -23,7 +23,6 @@ public class ImageProcessor {
     private final UserDataService userDataService;
     private final MessageSenderService messageSenderService;
     private final ImageService imageService;
-    private final BuyImageProcessor buyImageProcessor;
 
     public void process(User user, Long chatId, String text, UserActionPathEnum action) {
         if (action == null) {
@@ -42,7 +41,6 @@ public class ImageProcessor {
         }
         switch (action) {
             case IMAGE -> messageSenderService.send(BotSectionState.STATE_CHAT_ALREADY_IN_SECTION, chatId);
-            case BUY_IMAGES -> buyImageProcessor.process(user, chatId);
             case BALANCE ->
                     messageSenderService.send(MessageFormat.format(BotMessages.MESSAGE_IMAGE_BALANCE_CURRENT, user.getImageBalance()), chatId);
             case TRANSLATOR -> {

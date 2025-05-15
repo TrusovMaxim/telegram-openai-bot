@@ -14,6 +14,7 @@ import ru.trusov.openai.telegrambot.telegram.handler.CallbackQueryHandler;
 import ru.trusov.openai.telegrambot.telegram.handler.TextMessageHandler;
 import ru.trusov.openai.telegrambot.telegram.handler.VoiceMessageHandler;
 
+import java.text.MessageFormat;
 import java.time.LocalDateTime;
 
 @Component
@@ -47,12 +48,27 @@ public class TelegramBotFacade extends TelegramLongPollingBot {
         if (update.hasMessage() && update.getMessage().hasSuccessfulPayment()) {
             var chatId = update.getMessage().getChatId();
             var user = userService.getUser(chatId);
+            var payload = update.getMessage().getSuccessfulPayment().getInvoicePayload();
             if (user != null) {
-                user.setIsPremium(true);
-                user.setPremiumStart(LocalDateTime.now());
-                user.setPremiumEnd(LocalDateTime.now().plusMonths(1));
-                userService.save(user);
-                messageSenderService.send(BotMessages.MESSAGE_PREMIUM_ACTIVATED, chatId);
+                switch (payload) {
+                    case "premium-month" -> {
+                        user.setIsPremium(true);
+                        user.setPremiumStart(LocalDateTime.now());
+                        user.setPremiumEnd(LocalDateTime.now().plusMonths(1));
+                        userService.save(user);
+                        messageSenderService.send(BotMessages.MESSAGE_PREMIUM_ACTIVATED, chatId);
+                    }
+                    case "image-tokens-5" -> {
+                        var current = user.getImageBalance() == null ? 0 : user.getImageBalance();
+                        user.setImageBalance(current + 5);
+                        userService.save(user);
+                        messageSenderService.send(
+                                MessageFormat.format(BotMessages.MESSAGE_IMAGE_BALANCE_TOPPED_UP, user.getImageBalance()),
+                                chatId
+                        );
+                    }
+                    default -> log.warn("Неизвестный payload оплаты: {}", payload);
+                }
             }
             return;
         }

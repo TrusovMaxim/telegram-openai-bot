@@ -36,6 +36,16 @@ public class TextMessageHandler {
             }
             return;
         }
+        if ("/buy_images".equalsIgnoreCase(text)) {
+            if (user != null && user.getImageBalance() != null && user.getImageBalance() > 0) {
+                messageSenderService.send(
+                        MessageFormat.format(BotMessages.MESSAGE_IMAGE_BALANCE_WARNING, user.getImageBalance()),
+                        chatId
+                );
+            }
+            messageSenderService.sendImageInvoice(chatId);
+            return;
+        }
         var action = UserActionPathEnum.parse(text);
         if (user == null) {
             var from = update.getMessage().getFrom();

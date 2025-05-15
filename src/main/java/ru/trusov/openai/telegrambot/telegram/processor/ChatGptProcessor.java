@@ -24,7 +24,6 @@ public class ChatGptProcessor {
     private final UserService userService;
     private final UserDataService userDataService;
     private final MessageSenderService messageSenderService;
-    private final BuyImageProcessor buyImageProcessor;
     private static final int MAX_DIALOG_LENGTH = 40000;
 
     public void process(User user, Long chatId, String text, UserActionPathEnum action) {
@@ -56,7 +55,6 @@ public class ChatGptProcessor {
                     messageSenderService.send(BotPrompts.PROMPT_IMAGE_DESCRIPTION_REQUEST, chatId);
                 }
             }
-            case BUY_IMAGES -> buyImageProcessor.process(user, chatId);
             case BALANCE ->
                     messageSenderService.send(MessageFormat.format(BotMessages.MESSAGE_IMAGE_BALANCE_CURRENT, user.getImageBalance()), chatId);
             case YOUTUBE -> {
