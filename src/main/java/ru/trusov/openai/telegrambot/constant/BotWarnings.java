@@ -9,20 +9,20 @@ public interface BotWarnings {
             
             🔓 Оформите премиум — получите безлимитный доступ к голосовым функциям и другим возможностям.
             
-            👉 /activate_premium
+            👉 /buy_premium
             """;
     String WARNING_YOUTUBE_LIMIT_REACHED = """
             🛑 Вы можете обрабатывать только 1 видео в день.
             
             🔓 Премиум снимает это ограничение и позволяет обрабатывать неограниченное количество видео.
             
-            👉 /activate_premium
+            👉 /buy_premium
             """;
     String WARNING_GPT_DAILY_LIMIT_REACHED = """
             🛑 Вы использовали лимит из 20 сообщений на сегодня.
             
             🔓 Премиум открывает безлимитное общение с GPT и включает сохранение истории диалога.
             
-            👉 /activate_premium
+            👉 /buy_premium
             """;
 }

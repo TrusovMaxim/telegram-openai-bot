@@ -4,13 +4,10 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import ru.trusov.openai.telegrambot.constant.BotErrors;
-import ru.trusov.openai.telegrambot.constant.BotMessages;
 import ru.trusov.openai.telegrambot.model.entity.User;
 import ru.trusov.openai.telegrambot.model.enums.UserActionPathEnum;
 import ru.trusov.openai.telegrambot.service.bot.MessageSenderService;
 import ru.trusov.openai.telegrambot.service.user.UserService;
-
-import java.time.LocalDateTime;
 
 @Component
 @AllArgsConstructor
@@ -22,14 +19,8 @@ public class TextMessageHandler {
     public void handle(Update update, User user) {
         var chatId = update.getMessage().getChatId();
         var text = update.getMessage().getText();
-        if ("/activate_premium".equalsIgnoreCase(text)) {
-            if (user != null) {
-                user.setIsPremium(true);
-                user.setPremiumStart(LocalDateTime.now());
-                user.setPremiumEnd(LocalDateTime.now().plusMonths(1));
-                userService.save(user);
-                messageSenderService.send(BotMessages.MESSAGE_PREMIUM_ACTIVATED, chatId);
-            }
+        if ("/buy_premium".equalsIgnoreCase(text)) {
+            messageSenderService.sendPremiumInvoice(chatId);
             return;
         }
         var action = UserActionPathEnum.parse(text);
