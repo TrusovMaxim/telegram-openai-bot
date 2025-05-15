@@ -17,13 +17,22 @@ public class YoutubeSubtitleService {
         var videoId = extractVideoId(youtubeUrl);
         var subtitleFilePrefix = chatId + "_" + videoId;
         var dir = Paths.get(DOWNLOAD_DIR);
+        Path subtitlePath = null;
         try {
-            runYtDlp(youtubeUrl, chatId);
-            Path subtitlePath = null;
-            try (var stream = Files.newDirectoryStream(dir, subtitleFilePrefix + "*.vtt")) {
-                for (var path : stream) {
-                    subtitlePath = path;
+            Files.createDirectories(dir);
+            for (int attempt = 1; attempt <= 3; attempt++) {
+                runYtDlp(youtubeUrl, chatId);
+                Thread.sleep(1000L * attempt);
+                try (var stream = Files.newDirectoryStream(dir, subtitleFilePrefix + "*.vtt")) {
+                    for (var path : stream) {
+                        subtitlePath = path;
+                        break;
+                    }
+                }
+                if (subtitlePath != null) {
                     break;
+                } else {
+                    log.warn("Попытка {}: субтитры ещё не появились", attempt);
                 }
             }
             if (subtitlePath == null) {

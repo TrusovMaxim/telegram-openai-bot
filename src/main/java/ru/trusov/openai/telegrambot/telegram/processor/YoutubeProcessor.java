@@ -31,6 +31,10 @@ public class YoutubeProcessor {
             switchSection(user, chatId, action);
             return;
         }
+        if (!isValidYoutubeUrl(text)) {
+            messageSenderService.send(BotErrors.ERROR_YOUTUBE_INVALID_URL, chatId);
+            return;
+        }
         if (!hasYoutubeQuota(user)) {
             messageSenderService.send(BotWarnings.WARNING_YOUTUBE_LIMIT_REACHED, chatId);
             return;
@@ -101,10 +105,6 @@ public class YoutubeProcessor {
     }
 
     public void handleYoutubeUrl(Long chatId, String messageText) {
-        if (!isValidYoutubeUrl(messageText)) {
-            messageSenderService.send(BotErrors.ERROR_YOUTUBE_INVALID_URL, chatId);
-            return;
-        }
         try {
             var url = messageText.replace("/youtube", "").trim();
             messageSenderService.send(BotSectionState.STATE_YOUTUBE_SUBTITLE_LOADING, chatId);

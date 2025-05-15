@@ -29,7 +29,6 @@ public class ChatGptProcessor {
 
     public void process(User user, Long chatId, String text, UserActionPathEnum action) {
         if (action == null) {
-            messageSenderService.send(BotSectionState.STATE_REQUEST_SENT, chatId);
             var message = handleDialog(user, text);
             messageSenderService.send(message, chatId);
             return;
@@ -100,6 +99,7 @@ public class ChatGptProcessor {
             }
             data.setDialogUsageToday(data.getDialogUsageToday() + 1);
             userDataService.save(data);
+            messageSenderService.send(BotSectionState.STATE_REQUEST_SENT, user.getChatId());
             var prompt = "User: " + userText;
             return OpenAIClient.runOpenAI(prompt);
         }
@@ -111,6 +111,7 @@ public class ChatGptProcessor {
             userDataService.save(data);
             return BotWarnings.WARNING_DIALOG_TOO_LONG;
         }
+        messageSenderService.send(BotSectionState.STATE_REQUEST_SENT, user.getChatId());
         var answer = OpenAIClient.runOpenAI(updatedData);
         updatedData += "\nBot: " + answer;
         data.setData(updatedData);
