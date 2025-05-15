@@ -22,18 +22,15 @@ public class TextMessageHandler {
     public void handle(Update update, User user) {
         var chatId = update.getMessage().getChatId();
         var text = update.getMessage().getText();
-        if (text.startsWith("/start")) {
-            var parts = text.split(" ");
-            if (parts.length > 1 && "premium".equalsIgnoreCase(parts[1])) {
-                if (user != null) {
-                    user.setIsPremium(true);
-                    user.setPremiumStart(LocalDateTime.now());
-                    user.setPremiumEnd(LocalDateTime.now().plusMonths(1));
-                    userService.save(user);
-                    messageSenderService.send(BotMessages.MESSAGE_PREMIUM_ACTIVATED, chatId);
-                    return;
-                }
+        if ("/activate_premium".equalsIgnoreCase(text)) {
+            if (user != null) {
+                user.setIsPremium(true);
+                user.setPremiumStart(LocalDateTime.now());
+                user.setPremiumEnd(LocalDateTime.now().plusMonths(1));
+                userService.save(user);
+                messageSenderService.send(BotMessages.MESSAGE_PREMIUM_ACTIVATED, chatId);
             }
+            return;
         }
         var action = UserActionPathEnum.parse(text);
         if (user == null) {

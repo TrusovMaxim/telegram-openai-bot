@@ -95,7 +95,7 @@ public class ChatGptProcessor {
                 data.setDialogUsageToday(0);
             }
             if (data.getDialogUsageToday() >= 20) {
-                return BotWarnings.WARNING_GPT_DAILY_LIMIT_REACHED + "\n\n" + BotWarnings.PREMIUM_UPSELL;
+                return BotWarnings.WARNING_GPT_DAILY_LIMIT_REACHED;
             }
             data.setDialogUsageToday(data.getDialogUsageToday() + 1);
             userDataService.save(data);
