@@ -4,10 +4,13 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import ru.trusov.openai.telegrambot.constant.BotErrors;
+import ru.trusov.openai.telegrambot.constant.BotMessages;
 import ru.trusov.openai.telegrambot.model.entity.User;
 import ru.trusov.openai.telegrambot.model.enums.UserActionPathEnum;
 import ru.trusov.openai.telegrambot.service.bot.MessageSenderService;
 import ru.trusov.openai.telegrambot.service.user.UserService;
+
+import java.time.LocalDateTime;
 
 @Component
 @AllArgsConstructor
@@ -18,14 +21,27 @@ public class TextMessageHandler {
 
     public void handle(Update update, User user) {
         var chatId = update.getMessage().getChatId();
-        var enteredText = update.getMessage().getText();
-        var action = UserActionPathEnum.parse(enteredText);
+        var text = update.getMessage().getText();
+        if (text.startsWith("/start")) {
+            var parts = text.split(" ");
+            if (parts.length > 1 && "premium".equalsIgnoreCase(parts[1])) {
+                if (user != null) {
+                    user.setIsPremium(true);
+                    user.setPremiumStart(LocalDateTime.now());
+                    user.setPremiumEnd(LocalDateTime.now().plusMonths(1));
+                    userService.save(user);
+                    messageSenderService.send(BotMessages.MESSAGE_PREMIUM_ACTIVATED, chatId);
+                    return;
+                }
+            }
+        }
+        var action = UserActionPathEnum.parse(text);
         if (user == null) {
             var from = update.getMessage().getFrom();
             userService.registerUser(from.getUserName(), from.getFirstName(), from.getLastName(), chatId);
             messageSenderService.sendCommandList(chatId);
         } else {
-            actionSwitcher.route(user, chatId, enteredText, action);
+            actionSwitcher.route(user, chatId, text, action);
         }
     }
 

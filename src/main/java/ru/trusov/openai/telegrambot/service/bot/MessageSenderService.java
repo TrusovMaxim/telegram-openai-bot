@@ -52,7 +52,7 @@ public class MessageSenderService {
     public void sendCommandList(Long chatId) {
         var message = SendMessage.builder()
                 .chatId(chatId)
-                .text(BotMessages.MESSAGE_COMMAND_LIST)
+                .text(BotMessages.MESSAGE_INFO_INTRO)
                 .replyMarkup(new ReplyKeyboardMaker().getMainMenuKeyboard())
                 .build();
         try {

@@ -1,0 +1,18 @@
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.3.xsd">
+
+    <changeSet id="20250514-add-premium-fields" author="TrusovMaxim">
+        <addColumn tableName="user_bot">
+            <column name="is_premium" type="boolean" defaultValueBoolean="false"/>
+            <column name="premium_start" type="timestamp"/>
+            <column name="premium_end" type="timestamp"/>
+            <column name="voice_usage_today" type="int" defaultValueNumeric="0"/>
+            <column name="voice_usage_date" type="date"/>
+            <column name="youtube_usage_today" type="int" defaultValueNumeric="0"/>
+            <column name="youtube_usage_date" type="date"/>
+        </addColumn>
+    </changeSet>
+
+</databaseChangeLog>

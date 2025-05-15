@@ -16,6 +16,8 @@ import ru.trusov.openai.telegrambot.service.bot.TranslatorService;
 import ru.trusov.openai.telegrambot.service.user.UserDataService;
 import ru.trusov.openai.telegrambot.service.user.UserService;
 
+import java.text.MessageFormat;
+
 @Component
 @AllArgsConstructor
 public class TranslatorProcessor {
@@ -23,6 +25,7 @@ public class TranslatorProcessor {
     private final UserDataService userDataService;
     private final MessageSenderService messageSenderService;
     private final TranslatorService translatorService;
+    private final BuyImageProcessor buyImageProcessor;
 
     public void process(User user, Voice voice, Long chatId) {
         if (voice.getDuration() > 600) {
@@ -60,6 +63,9 @@ public class TranslatorProcessor {
                     messageSenderService.send(BotPrompts.PROMPT_IMAGE_DESCRIPTION_REQUEST, chatId);
                 }
             }
+            case BUY_IMAGES -> buyImageProcessor.process(user, chatId);
+            case BALANCE ->
+                    messageSenderService.send(MessageFormat.format(BotMessages.MESSAGE_IMAGE_BALANCE_CURRENT, user.getImageBalance()), chatId);
             case YOUTUBE -> {
                 userService.updateBotStateEnum(user, BotStateEnum.YOUTUBE);
                 messageSenderService.send(BotSectionState.STATE_CHAT_SWITCHED_TO_YOUTUBE, chatId);

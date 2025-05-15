@@ -55,4 +55,10 @@ public class UserServiceImpl implements UserService {
         user.setCurrentTime(new Date());
         userRepository.save(user);
     }
+
+    @Override
+    @Transactional
+    public void save(User user) {
+        userRepository.save(user);
+    }
 }

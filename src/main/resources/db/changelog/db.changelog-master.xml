@@ -6,4 +6,7 @@
     http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.3.xsd">
 
     <include file="db/changelog/changesets/001-create-tables.xml"/>
+    <include file="/db/changelog/changesets/20250514-add-image-balance-column.xml"/>
+    <include file="/db/changelog/changesets/20250514-add-premium-fields.xml"/>
+    <include file="/db/changelog/changesets/20250514-add-gpt-usage-limits.xml"/>
 </databaseChangeLog>

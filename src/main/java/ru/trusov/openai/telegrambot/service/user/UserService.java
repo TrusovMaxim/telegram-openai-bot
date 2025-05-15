@@ -15,4 +15,6 @@ public interface UserService {
     void updateSettingImageEnum(User user, ImageSizeEnum imageSizeEnum);
 
     void registerUser(String userName, String firstName, String lastName, Long chatId);
+
+    void save(User user);
 }

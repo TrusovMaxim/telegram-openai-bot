@@ -15,6 +15,7 @@ public class ActionSwitcher {
     private final FeedbackProcessor feedbackProcessor;
     private final TranslatorProcessor translatorProcessor;
     private final YoutubeProcessor youtubeProcessor;
+    private final BuyImageProcessor buyImageProcessor;
 
     public void route(User user, Long chatId, String text, UserActionPathEnum action) {
         switch (user.getBotStateEnum()) {
@@ -24,6 +25,7 @@ public class ActionSwitcher {
             case FEEDBACK -> feedbackProcessor.process(user, chatId, text, action);
             case TRANSLATOR -> translatorProcessor.process(user, chatId, action);
             case YOUTUBE -> youtubeProcessor.process(user, chatId, text, action);
+            case BUY_IMAGES -> buyImageProcessor.process(user, chatId);
         }
     }
 }
