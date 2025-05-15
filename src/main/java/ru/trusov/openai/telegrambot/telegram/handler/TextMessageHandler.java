@@ -18,14 +18,18 @@ public class TextMessageHandler {
 
     public void handle(Update update, User user) {
         var chatId = update.getMessage().getChatId();
-        var enteredText = update.getMessage().getText();
-        var action = UserActionPathEnum.parse(enteredText);
+        var text = update.getMessage().getText();
+        if ("/buy_premium".equalsIgnoreCase(text)) {
+            messageSenderService.sendPremiumInvoice(chatId);
+            return;
+        }
+        var action = UserActionPathEnum.parse(text);
         if (user == null) {
             var from = update.getMessage().getFrom();
             userService.registerUser(from.getUserName(), from.getFirstName(), from.getLastName(), chatId);
             messageSenderService.sendCommandList(chatId);
         } else {
-            actionSwitcher.route(user, chatId, enteredText, action);
+            actionSwitcher.route(user, chatId, text, action);
         }
     }
 

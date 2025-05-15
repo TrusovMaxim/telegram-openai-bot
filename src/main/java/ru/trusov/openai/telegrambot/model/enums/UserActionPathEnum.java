@@ -18,6 +18,8 @@ public enum UserActionPathEnum {
     IMAGE("/image"),
     SETTING_IMAGE("/setting_image"),
     YOUTUBE("/youtube"),
+    BUY_IMAGES("/buy_images"),
+    BALANCE("/balance"),
     DONATE("Донат"),
     ABOUT_AUTHOR("Об авторе");
 

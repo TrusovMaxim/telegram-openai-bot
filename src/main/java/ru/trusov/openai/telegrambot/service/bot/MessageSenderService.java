@@ -2,11 +2,15 @@ package ru.trusov.openai.telegrambot.service.bot;
 
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
+import org.telegram.telegrambots.meta.api.methods.invoices.SendInvoice;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
+import org.telegram.telegrambots.meta.api.objects.payments.LabeledPrice;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+import ru.trusov.openai.telegrambot.constant.BotErrors;
 import ru.trusov.openai.telegrambot.constant.BotMessages;
 import ru.trusov.openai.telegrambot.constant.BotSectionState;
 import ru.trusov.openai.telegrambot.constant.BotTemplates;
@@ -15,12 +19,15 @@ import ru.trusov.openai.telegrambot.util.keyboard.InlineKeyboardSettingVoiceMake
 import ru.trusov.openai.telegrambot.util.keyboard.ReplyKeyboardMaker;
 
 import java.text.MessageFormat;
+import java.util.List;
 
 @Slf4j
 @Setter
 @Service
 public class MessageSenderService {
     private TelegramLongPollingBot telegramBot;
+    @Value("${telegram.payment.provider-token}")
+    private String providerToken;
 
     public void send(String text, Long chatId) {
         try {
@@ -52,7 +59,7 @@ public class MessageSenderService {
     public void sendCommandList(Long chatId) {
         var message = SendMessage.builder()
                 .chatId(chatId)
-                .text(BotMessages.MESSAGE_COMMAND_LIST)
+                .text(BotMessages.MESSAGE_INFO_INTRO)
                 .replyMarkup(new ReplyKeyboardMaker().getMainMenuKeyboard())
                 .build();
         try {
@@ -92,6 +99,25 @@ public class MessageSenderService {
         } catch (TelegramApiException e) {
             log.error("Ошибка при отправке сообщения с выбором типа перевода в чат {}: {}", chatId, e.getMessage(), e);
             throw new RuntimeException("Не удалось отправить сообщение с выбором типа перевода", e);
+        }
+    }
+
+    public void sendPremiumInvoice(Long chatId) {
+        var prices = List.of(new LabeledPrice("Премиум-доступ на 1 месяц", 299_00));
+        var invoice = new SendInvoice();
+        invoice.setChatId(chatId);
+        invoice.setTitle("Премиум-доступ");
+        invoice.setDescription("Доступ ко всем функциям бота без ограничений на 30 дней.");
+        invoice.setPayload("premium-month");
+        invoice.setProviderToken(providerToken);
+        invoice.setCurrency("RUB");
+        invoice.setPrices(prices);
+        invoice.setStartParameter("premium");
+        try {
+            telegramBot.execute(invoice);
+        } catch (TelegramApiException e) {
+            log.error("Ошибка при отправке инвойса на премиум: {}", e.getMessage(), e);
+            send(BotErrors.ERROR_PAYMENT_FAILED, chatId);
         }
     }
 }

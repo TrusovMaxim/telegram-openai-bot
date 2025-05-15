@@ -6,5 +6,6 @@ public enum BotStateEnum {
     CHAT_GPT,
     FEEDBACK,
     IMAGE,
-    YOUTUBE
+    YOUTUBE,
+    BUY_IMAGES
 }

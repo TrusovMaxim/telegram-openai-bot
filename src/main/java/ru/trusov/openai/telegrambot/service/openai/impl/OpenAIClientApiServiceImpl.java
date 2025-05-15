@@ -24,6 +24,7 @@ public class OpenAIClientApiServiceImpl {
     private String whisperModel;
     @Value("${APP_OPEN_AI_MODEL}")
     private String gptModel;
+    private static final int MAX_SUBTITLE_LENGTH = 30000;
 
     public WhisperTranslatorResponse speechToTextTranscriptions(TranslatorRequest translatorRequest) {
         var whisperTranscriptionRequest = WhisperTranslatorRequest.builder()
@@ -59,9 +60,9 @@ public class OpenAIClientApiServiceImpl {
 
     public String summarizeText(String subtitles) {
         var prompt = BotPrompts.PROMPT_SUMMARIZE_YOUTUBE;
-        if (subtitles.length() > 30000) {
-            log.warn("Субтитры слишком длинные: {} символов. Обрезаем до 40000.", subtitles.length());
-            subtitles = subtitles.substring(0, 30000);
+        if (subtitles.length() > MAX_SUBTITLE_LENGTH) {
+            log.warn("Субтитры слишком длинные: {} символов. Обрезаем до {}", subtitles.length(), MAX_SUBTITLE_LENGTH);
+            subtitles = subtitles.substring(0, MAX_SUBTITLE_LENGTH);
         }
         var fullPrompt = prompt + "\n\n" + subtitles;
         var chatRequest = ChatRequest.builder()

@@ -3,10 +3,7 @@ package ru.trusov.openai.telegrambot.telegram.processor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import ru.trusov.openai.telegrambot.constant.BotErrors;
-import ru.trusov.openai.telegrambot.constant.BotMessages;
-import ru.trusov.openai.telegrambot.constant.BotPrompts;
-import ru.trusov.openai.telegrambot.constant.BotSectionState;
+import ru.trusov.openai.telegrambot.constant.*;
 import ru.trusov.openai.telegrambot.model.entity.User;
 import ru.trusov.openai.telegrambot.model.enums.BotStateEnum;
 import ru.trusov.openai.telegrambot.model.enums.UserActionPathEnum;
@@ -15,6 +12,9 @@ import ru.trusov.openai.telegrambot.service.openai.impl.OpenAIClientApiServiceIm
 import ru.trusov.openai.telegrambot.service.user.UserDataService;
 import ru.trusov.openai.telegrambot.service.user.UserService;
 import ru.trusov.openai.telegrambot.service.youtube.YoutubeSubtitleService;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Slf4j
 @Component
@@ -27,10 +27,22 @@ public class YoutubeProcessor {
     private final OpenAIClientApiServiceImpl openAIClientApiService;
 
     public void process(User user, Long chatId, String text, UserActionPathEnum action) {
-        if (action == null) {
-            handleYoutubeUrl(chatId, text);
+        if (action != null) {
+            switchSection(user, chatId, action);
             return;
         }
+        if (!isValidYoutubeUrl(text)) {
+            messageSenderService.send(BotErrors.ERROR_YOUTUBE_INVALID_URL, chatId);
+            return;
+        }
+        if (!hasYoutubeQuota(user)) {
+            messageSenderService.send(BotWarnings.WARNING_YOUTUBE_LIMIT_REACHED, chatId);
+            return;
+        }
+        handleYoutubeUrl(chatId, text);
+    }
+
+    private void switchSection(User user, Long chatId, UserActionPathEnum action) {
         switch (action) {
             case YOUTUBE -> messageSenderService.send(BotSectionState.STATE_CHAT_ALREADY_IN_SECTION, chatId);
             case TRANSLATOR -> {
@@ -74,11 +86,25 @@ public class YoutubeProcessor {
         }
     }
 
-    public void handleYoutubeUrl(Long chatId, String messageText) {
-        if (!isValidYoutubeUrl(messageText)) {
-            messageSenderService.send(BotErrors.ERROR_YOUTUBE_INVALID_URL, chatId);
-            return;
+    private boolean hasYoutubeQuota(User user) {
+        var now = LocalDate.now();
+        if (Boolean.TRUE.equals(user.getIsPremium()) && user.getPremiumEnd() != null &&
+                LocalDateTime.now().isBefore(user.getPremiumEnd())) {
+            return true;
         }
+        if (user.getYoutubeUsageDate() == null || !user.getYoutubeUsageDate().isEqual(now)) {
+            user.setYoutubeUsageDate(now);
+            user.setYoutubeUsageToday(0);
+        }
+        if (user.getYoutubeUsageToday() >= 1) {
+            return false;
+        }
+        user.setYoutubeUsageToday(user.getYoutubeUsageToday() + 1);
+        userService.save(user);
+        return true;
+    }
+
+    public void handleYoutubeUrl(Long chatId, String messageText) {
         try {
             var url = messageText.replace("/youtube", "").trim();
             messageSenderService.send(BotSectionState.STATE_YOUTUBE_SUBTITLE_LOADING, chatId);

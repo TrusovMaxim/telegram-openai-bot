@@ -7,6 +7,8 @@ import ru.trusov.openai.telegrambot.model.enums.BotStateEnum;
 import ru.trusov.openai.telegrambot.model.enums.ImageSizeEnum;
 import ru.trusov.openai.telegrambot.model.enums.TranslatorTypeEnum;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 @Entity
@@ -38,6 +40,22 @@ public class User {
     @Column(name = "created_at")
     @Temporal(TemporalType.TIMESTAMP)
     private Date currentTime;
+    @Column(name = "image_balance")
+    private Integer imageBalance = 0;
+    @Column(name = "is_premium")
+    private Boolean isPremium;
+    @Column(name = "premium_start")
+    private LocalDateTime premiumStart;
+    @Column(name = "premium_end")
+    private LocalDateTime premiumEnd;
+    @Column(name = "voice_usage_today")
+    private Integer voiceUsageToday;
+    @Column(name = "voice_usage_date")
+    private LocalDate voiceUsageDate;
+    @Column(name = "youtube_usage_today")
+    private Integer youtubeUsageToday;
+    @Column(name = "youtube_usage_date")
+    private LocalDate youtubeUsageDate;
 
     public User(Long chatId) {
         this.chatId = chatId;

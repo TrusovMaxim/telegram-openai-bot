@@ -13,6 +13,8 @@ import ru.trusov.openai.telegrambot.service.user.UserDataService;
 import ru.trusov.openai.telegrambot.service.feedback.UserFeedbackService;
 import ru.trusov.openai.telegrambot.service.user.UserService;
 
+import java.text.MessageFormat;
+
 @Component
 @AllArgsConstructor
 public class FeedbackProcessor {
@@ -20,6 +22,7 @@ public class FeedbackProcessor {
     private final UserDataService userDataService;
     private final UserFeedbackService userFeedbackService;
     private final MessageSenderService messageSenderService;
+    private final BuyImageProcessor buyImageProcessor;
 
     public void process(User user, Long chatId, String text, UserActionPathEnum action) {
         if (action == null) {
@@ -55,6 +58,9 @@ public class FeedbackProcessor {
                     messageSenderService.send(BotPrompts.PROMPT_IMAGE_DESCRIPTION_REQUEST, chatId);
                 }
             }
+            case BUY_IMAGES -> buyImageProcessor.process(user, chatId);
+            case BALANCE ->
+                    messageSenderService.send(MessageFormat.format(BotMessages.MESSAGE_IMAGE_BALANCE_CURRENT, user.getImageBalance()), chatId);
             case YOUTUBE -> {
                 userService.updateBotStateEnum(user, BotStateEnum.YOUTUBE);
                 messageSenderService.send(BotSectionState.STATE_CHAT_SWITCHED_TO_YOUTUBE, chatId);
