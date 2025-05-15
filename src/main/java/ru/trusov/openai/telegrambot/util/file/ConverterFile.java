@@ -30,9 +30,8 @@ public class ConverterFile {
         var executor = new FFmpegExecutor(ffmpeg);
         try {
             executor.createJob(builder).run();
-            executor.createTwoPassJob(builder).run();
         } catch (IllegalArgumentException e) {
-            log.warn("Второй проход FFmpeg завершился с ошибкой: {}", e.getMessage());
+            log.warn("FFmpeg завершился с ошибкой: {}", e.getMessage());
         }
     }
 }
