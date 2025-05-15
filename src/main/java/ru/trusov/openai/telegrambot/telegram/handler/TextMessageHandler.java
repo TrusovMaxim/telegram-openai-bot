@@ -29,7 +29,7 @@ public class TextMessageHandler {
             if (user != null && Boolean.TRUE.equals(user.getIsPremium())
                     && user.getPremiumEnd() != null
                     && LocalDateTime.now().isBefore(user.getPremiumEnd())) {
-                var until = user.getPremiumEnd().format(DateTimeFormatter.ofPattern("dd MMMM yyyy", new Locale("ru")));
+                var until = user.getPremiumEnd().format(DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale.forLanguageTag("ru")));
                 messageSenderService.send(MessageFormat.format(BotMessages.MESSAGE_PREMIUM_ALREADY_ACTIVE, until), chatId);
             } else {
                 messageSenderService.sendPremiumInvoice(chatId);
