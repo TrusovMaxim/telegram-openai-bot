@@ -17,8 +17,9 @@ public class DownloadFileVoice {
 
     public File download(String urlVoice, Long chatId) throws IOException, InterruptedException {
         Files.createDirectories(Path.of(AUDIO_DIR));
-        var sourcePath = Path.of(AUDIO_DIR, chatId + "_source.oga");
-        var targetPath = Path.of(AUDIO_DIR, chatId + "_compressed.mp3");
+        var uniquePrefix = chatId + "_" + System.nanoTime();
+        var sourcePath = Path.of(AUDIO_DIR, uniquePrefix + "_source.oga");
+        var targetPath = Path.of(AUDIO_DIR, uniquePrefix + "_compressed.mp3");
         FileUtils.copyURLToFile(new URL(urlVoice), sourcePath.toFile());
         var builder = new ProcessBuilder(
                 "ffmpeg", "-y",

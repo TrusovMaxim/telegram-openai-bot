@@ -15,14 +15,13 @@ public class YoutubeSubtitleService {
     private static final long MAX_SUBTITLE_FILE_SIZE = 20 * 1024 * 1024;
 
     public String extractSubtitles(String youtubeUrl, Long chatId) {
-        var videoId = extractVideoId(youtubeUrl);
-        var subtitleFilePrefix = chatId + "_" + videoId;
+        var subtitleFilePrefix = chatId + "_" + System.nanoTime();
         var dir = Paths.get(DOWNLOAD_DIR);
         Path subtitlePath = null;
         try {
             Files.createDirectories(dir);
             for (int attempt = 1; attempt <= 3; attempt++) {
-                runYtDlp(youtubeUrl, chatId);
+                runYtDlp(youtubeUrl, subtitleFilePrefix);
                 Thread.sleep(1000L * attempt);
                 try (var stream = Files.newDirectoryStream(dir, subtitleFilePrefix + "*.vtt")) {
                     for (var path : stream) {
@@ -30,11 +29,8 @@ public class YoutubeSubtitleService {
                         break;
                     }
                 }
-                if (subtitlePath != null) {
-                    break;
-                } else {
-                    log.warn("Попытка {}: субтитры ещё не появились", attempt);
-                }
+                if (subtitlePath != null) break;
+                log.warn("Попытка {}: субтитры ещё не появились", attempt);
             }
             if (subtitlePath == null) {
                 log.error("Файл субтитров не найден для {}", subtitleFilePrefix);
@@ -59,9 +55,9 @@ public class YoutubeSubtitleService {
         }
     }
 
-    private void runYtDlp(String youtubeUrl, Long chatId) throws IOException, InterruptedException {
+    private void runYtDlp(String youtubeUrl, String subtitleFilePrefix) throws IOException, InterruptedException {
         Files.createDirectories(Paths.get(DOWNLOAD_DIR));
-        var outputPattern = DOWNLOAD_DIR + "/" + chatId + "_%(id)s.%(ext)s";
+        var outputPattern = DOWNLOAD_DIR + "/" + subtitleFilePrefix + ".%(ext)s";
         var pb = new ProcessBuilder(
                 "yt-dlp",
                 "--write-auto-sub",
@@ -92,25 +88,6 @@ public class YoutubeSubtitleService {
                     .filter(line -> !patternTime.matcher(line).matches())
                     .map(line -> patternTag.matcher(line).replaceAll(""))
                     .collect(Collectors.joining(" "));
-        }
-    }
-
-    private String extractVideoId(String url) {
-        try {
-            if (url.contains("v=")) {
-                var start = url.indexOf("v=") + 2;
-                var end = url.indexOf("&", start);
-                return end != -1 ? url.substring(start, end) : url.substring(start);
-            } else if (url.contains("youtu.be/")) {
-                var start = url.indexOf("youtu.be/") + 9;
-                var end = url.indexOf("?", start);
-                return end != -1 ? url.substring(start, end) : url.substring(start);
-            } else {
-                throw new IllegalArgumentException("Неподдерживаемый формат ссылки: " + url);
-            }
-        } catch (Exception e) {
-            log.error("Не удалось извлечь видео ID из URL: {}", url, e);
-            throw new IllegalArgumentException("Невалидный YouTube URL");
         }
     }
 }
