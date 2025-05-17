@@ -13,6 +13,7 @@ import ru.trusov.openai.telegrambot.service.bot.ImageService;
 import ru.trusov.openai.telegrambot.service.bot.MessageSenderService;
 import ru.trusov.openai.telegrambot.service.user.UserDataService;
 import ru.trusov.openai.telegrambot.service.user.UserService;
+import ru.trusov.openai.telegrambot.util.file.ConcurrencyLimiter;
 
 import java.text.MessageFormat;
 
@@ -23,6 +24,7 @@ public class ImageProcessor {
     private final UserDataService userDataService;
     private final MessageSenderService messageSenderService;
     private final ImageService imageService;
+    private final ConcurrencyLimiter concurrencyLimiter;
 
     public void process(User user, Long chatId, String text, UserActionPathEnum action) {
         if (action == null) {
@@ -92,8 +94,11 @@ public class ImageProcessor {
     }
 
     private void generate(User user, Long chatId, String prompt) {
-        messageSenderService.send(BotSectionState.STATE_REQUEST_IMAGE_SENT, chatId);
-        var url = imageService.generate(user.getSettingImage(), prompt);
-        messageSenderService.sendImageLink(url, chatId);
+        concurrencyLimiter.executeLimited(() -> {
+            messageSenderService.send(BotSectionState.STATE_REQUEST_IMAGE_SENT, chatId);
+            var url = imageService.generate(user.getSettingImage(), prompt);
+            messageSenderService.sendImageLink(url, chatId);
+            return null;
+        }, "image_generation", chatId, msg -> messageSenderService.send(msg, chatId));
     }
 }

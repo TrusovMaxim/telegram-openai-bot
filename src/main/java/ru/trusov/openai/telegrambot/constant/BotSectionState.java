@@ -39,4 +39,5 @@ public interface BotSectionState {
     String STATE_CHOICE_IMAGE_SIZE_SMALL = "✅ Размер выбран: 256x256.\nПожалуйста, отправьте описание для генерации изображения.\n\nВы перешли в режим /image.";
     String STATE_CHOICE_IMAGE_SIZE_MEDIUM = "✅ Размер выбран: 512x512.\nПожалуйста, отправьте описание для генерации изображения.\n\nВы перешли в режим /image.";
     String STATE_CHOICE_IMAGE_SIZE_LARGE = "✅ Размер выбран: 1024x1024.\nПожалуйста, отправьте описание для генерации изображения.\n\nВы перешли в режим /image.";
+    String STATE_WAITING_QUEUE_PREFIX = "⏳ Идёт обработка… Подождите, очередь: ";
 }

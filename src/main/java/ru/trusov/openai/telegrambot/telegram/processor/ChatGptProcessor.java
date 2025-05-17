@@ -13,6 +13,7 @@ import ru.trusov.openai.telegrambot.model.enums.UserActionPathEnum;
 import ru.trusov.openai.telegrambot.service.bot.MessageSenderService;
 import ru.trusov.openai.telegrambot.service.user.UserDataService;
 import ru.trusov.openai.telegrambot.service.user.UserService;
+import ru.trusov.openai.telegrambot.util.file.ConcurrencyLimiter;
 
 import java.text.MessageFormat;
 import java.time.LocalDate;
@@ -25,6 +26,7 @@ public class ChatGptProcessor {
     private final UserDataService userDataService;
     private final MessageSenderService messageSenderService;
     private static final int MAX_DIALOG_LENGTH = 40000;
+    private final ConcurrencyLimiter concurrencyLimiter;
 
     public void process(User user, Long chatId, String text, UserActionPathEnum action) {
         if (action == null) {
@@ -99,19 +101,29 @@ public class ChatGptProcessor {
             userDataService.save(data);
             messageSenderService.send(BotSectionState.STATE_REQUEST_SENT, user.getChatId());
             var prompt = "User: " + userText;
-            return OpenAIClient.runOpenAI(prompt);
+            return concurrencyLimiter.executeLimited(
+                    () -> OpenAIClient.runOpenAI(prompt),
+                    "chat_gpt",
+                    user.getChatId(),
+                    msg -> messageSenderService.send(msg, user.getChatId())
+            );
         }
         var currentData = data.getData();
-        var updatedData = (currentData == null ? "" : currentData + "\n") + "User: " + userText;
-        if (updatedData.length() > MAX_DIALOG_LENGTH) {
+        var promptToSend = (currentData == null ? "" : currentData + "\n") + "User: " + userText;
+        if (promptToSend.length() > MAX_DIALOG_LENGTH) {
             data.setData(null);
             data.setCountData(0L);
             userDataService.save(data);
             return BotWarnings.WARNING_DIALOG_TOO_LONG;
         }
         messageSenderService.send(BotSectionState.STATE_REQUEST_SENT, user.getChatId());
-        var answer = OpenAIClient.runOpenAI(updatedData);
-        updatedData += "\nBot: " + answer;
+        var answer = concurrencyLimiter.executeLimited(
+                () -> OpenAIClient.runOpenAI(promptToSend),
+                "chat_gpt",
+                user.getChatId(),
+                msg -> messageSenderService.send(msg, user.getChatId())
+        );
+        var updatedData = promptToSend + "\nBot: " + answer;
         data.setData(updatedData);
         data.setCountData(data.getCountData() + 1);
         var count = data.getCountData().intValue();

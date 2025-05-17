@@ -11,9 +11,11 @@ import org.springframework.web.client.RestTemplate;
 import ru.trusov.openai.telegrambot.constant.BotErrors;
 import ru.trusov.openai.telegrambot.model.enums.TranslatorTypeEnum;
 import ru.trusov.openai.telegrambot.model.response.WhisperTranslatorResponse;
+import ru.trusov.openai.telegrambot.util.file.ConcurrencyLimiter;
 import ru.trusov.openai.telegrambot.util.file.DownloadFileVoice;
 import ru.trusov.openai.telegrambot.util.file.GetUrlVoice;
 
+import java.io.IOException;
 import java.nio.file.Files;
 
 import org.springframework.http.HttpHeaders;
@@ -27,40 +29,52 @@ public class TranslatorService {
     private String translationUrl;
     @Value("${RESOURCE_OPEN_AI_URL_TRANSCRIPTION}")
     private String transcriptionUrl;
+    private final ConcurrencyLimiter concurrencyLimiter;
+    private final MessageSenderService messageSenderService;
 
     public String translate(TranslatorTypeEnum type, String fileId, Long chatId) {
-        var resourceUrl = switch (type) {
-            case TRANSLATION -> translationUrl;
-            case TRANSCRIPTION -> transcriptionUrl;
-        };
-        try {
-            var fileUrl = GetUrlVoice.getFileUrl(fileId);
+        return concurrencyLimiter.executeLimited(() -> {
+            var resourceUrl = switch (type) {
+                case TRANSLATION -> translationUrl;
+                case TRANSCRIPTION -> transcriptionUrl;
+            };
             FileSystemResource fsr = null;
-            for (int attempt = 1; attempt <= 3; attempt++) {
-                fsr = new DownloadFileVoice().downloadAsResource(fileUrl, chatId);
-                if (fsr.getFile().exists() && fsr.getFile().length() > 0) break;
-                log.warn("Попытка {}: файл ещё не готов, ожидаю...", attempt);
-                Thread.sleep(1000L * attempt);
+            try {
+                var fileUrl = GetUrlVoice.getFileUrl(fileId);
+                for (int attempt = 1; attempt <= 3; attempt++) {
+                    fsr = new FileSystemResource(new DownloadFileVoice().download(fileUrl, chatId));
+                    if (fsr.getFile().exists() && fsr.getFile().length() > 0) break;
+                    log.warn("Попытка {}: файл ещё не готов, ожидаю...", attempt);
+                    Thread.sleep(1000L * attempt);
+                }
+                if (!fsr.getFile().exists()) {
+                    log.error("Файл голосового сообщения не найден или пуст. chatId={}, fileId={}", chatId, fileId);
+                    return BotErrors.ERROR_EMPTY_VOICE_MESSAGE;
+                }
+                var map = new LinkedMultiValueMap<String, Object>();
+                map.add("file", fsr);
+                var headers = new HttpHeaders();
+                headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+                var entity = new HttpEntity<>(map, headers);
+                var response = new RestTemplate().postForObject(resourceUrl, entity, WhisperTranslatorResponse.class);
+                Files.deleteIfExists(fsr.getFile().toPath());
+                if (response == null || response.getText().isEmpty()) {
+                    log.warn("Пустой ответ от OpenAI. type={}, fileId={}, chatId={}", type, fileId, chatId);
+                    return BotErrors.ERROR_EMPTY_VOICE_MESSAGE;
+                }
+                return response.getText();
+            } catch (Exception e) {
+                log.error("Ошибка при переводе голосового сообщения. type={}, fileId={}, chatId={}", type, fileId, chatId, e);
+                return BotErrors.ERROR_INTERNAL_TRANSLATION;
+            } finally {
+                try {
+                    if (fsr != null && fsr.getFile().exists()) {
+                        Files.deleteIfExists(fsr.getFile().toPath());
+                    }
+                } catch (IOException e) {
+                    log.warn("Не удалось удалить временный файл: {}", e.getMessage());
+                }
             }
-            if (!fsr.getFile().exists()) {
-                log.error("Файл голосового сообщения не найден или пуст. chatId={}, fileId={}", chatId, fileId);
-                return BotErrors.ERROR_EMPTY_VOICE_MESSAGE;
-            }
-            var map = new LinkedMultiValueMap<String, Object>();
-            map.add("file", fsr);
-            var headers = new HttpHeaders();
-            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-            var entity = new HttpEntity<>(map, headers);
-            var response = new RestTemplate().postForObject(resourceUrl, entity, WhisperTranslatorResponse.class);
-            Files.deleteIfExists(fsr.getFile().toPath());
-            if (response == null || response.getText().isEmpty()) {
-                log.warn("Пустой ответ от OpenAI. type={}, fileId={}, chatId={}", type, fileId, chatId);
-                return BotErrors.ERROR_EMPTY_VOICE_MESSAGE;
-            }
-            return response.getText();
-        } catch (Exception e) {
-            log.error("Ошибка при переводе голосового сообщения. type={}, fileId={}, chatId={}", type, fileId, chatId, e);
-            return BotErrors.ERROR_INTERNAL_TRANSLATION;
-        }
+        }, "voice", chatId, msg -> messageSenderService.send(msg, chatId));
     }
 }

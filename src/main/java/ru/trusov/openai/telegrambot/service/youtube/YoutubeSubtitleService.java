@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 @Service
 public class YoutubeSubtitleService {
     private static final String DOWNLOAD_DIR = "temp";
+    private static final long MAX_SUBTITLE_FILE_SIZE = 20 * 1024 * 1024;
 
     public String extractSubtitles(String youtubeUrl, Long chatId) {
         var videoId = extractVideoId(youtubeUrl);
@@ -39,6 +40,10 @@ public class YoutubeSubtitleService {
                 log.error("Файл субтитров не найден для {}", subtitleFilePrefix);
                 throw new FileNotFoundException("Файл субтитров не найден: " + subtitleFilePrefix);
             }
+            if (Files.size(subtitlePath) > MAX_SUBTITLE_FILE_SIZE) {
+                log.warn("Субтитры слишком большие: {} MB для {}", Files.size(subtitlePath) / 1024 / 1024, subtitleFilePrefix);
+                throw new IOException("Видео слишком большое для обработки. Используйте /youtube на более короткое видео.");
+            }
             return parseSubtitleFile(subtitlePath);
         } catch (Exception e) {
             log.error("Ошибка при получении субтитров: {}", e.getMessage(), e);
@@ -62,6 +67,9 @@ public class YoutubeSubtitleService {
                 "--write-auto-sub",
                 "--sub-lang", "en,ru",
                 "--skip-download",
+                "--no-playlist",
+                "--max-filesize", "100M",
+                "--sub-format", "best",
                 "-o", outputPattern,
                 youtubeUrl
         );

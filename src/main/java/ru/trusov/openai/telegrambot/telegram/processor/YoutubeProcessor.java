@@ -12,6 +12,7 @@ import ru.trusov.openai.telegrambot.service.openai.impl.OpenAIClientApiServiceIm
 import ru.trusov.openai.telegrambot.service.user.UserDataService;
 import ru.trusov.openai.telegrambot.service.user.UserService;
 import ru.trusov.openai.telegrambot.service.youtube.YoutubeSubtitleService;
+import ru.trusov.openai.telegrambot.util.file.ConcurrencyLimiter;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -25,6 +26,7 @@ public class YoutubeProcessor {
     private final MessageSenderService messageSenderService;
     private final YoutubeSubtitleService subtitleService;
     private final OpenAIClientApiServiceImpl openAIClientApiService;
+    private final ConcurrencyLimiter concurrencyLimiter;
 
     public void process(User user, Long chatId, String text, UserActionPathEnum action) {
         if (action != null) {
@@ -39,7 +41,7 @@ public class YoutubeProcessor {
             messageSenderService.send(BotWarnings.WARNING_YOUTUBE_LIMIT_REACHED, chatId);
             return;
         }
-        handleYoutubeUrl(chatId, text);
+        handleYoutubeUrl(user, chatId, text);
     }
 
     private void switchSection(User user, Long chatId, UserActionPathEnum action) {
@@ -88,38 +90,51 @@ public class YoutubeProcessor {
 
     private boolean hasYoutubeQuota(User user) {
         var now = LocalDate.now();
-        if (Boolean.TRUE.equals(user.getIsPremium()) && user.getPremiumEnd() != null &&
+        if (Boolean.TRUE.equals(user.getIsPremium()) &&
+                user.getPremiumEnd() != null &&
                 LocalDateTime.now().isBefore(user.getPremiumEnd())) {
             return true;
         }
         if (user.getYoutubeUsageDate() == null || !user.getYoutubeUsageDate().isEqual(now)) {
-            user.setYoutubeUsageDate(now);
-            user.setYoutubeUsageToday(0);
+            return true;
         }
-        if (user.getYoutubeUsageToday() >= 1) {
-            return false;
-        }
-        user.setYoutubeUsageToday(user.getYoutubeUsageToday() + 1);
-        userService.save(user);
-        return true;
+        return user.getYoutubeUsageToday() < 1;
     }
 
-    public void handleYoutubeUrl(Long chatId, String messageText) {
-        try {
-            var url = messageText.replace("/youtube", "").trim();
-            messageSenderService.send(BotSectionState.STATE_YOUTUBE_SUBTITLE_LOADING, chatId);
-            var subtitles = subtitleService.extractSubtitles(url, chatId);
-            if (subtitles == null || subtitles.isBlank()) {
-                messageSenderService.send(BotErrors.ERROR_YOUTUBE_SUBTITLE_NOT_FOUND, chatId);
-                return;
-            }
-            messageSenderService.send(BotSectionState.STATE_YOUTUBE_SUMMARIZING, chatId);
-            var summary = openAIClientApiService.summarizeText(subtitles);
-            messageSenderService.send(summary, chatId);
-        } catch (Exception e) {
-            log.error("Ошибка при обработке YouTube-видео: {}", e.getMessage(), e);
-            messageSenderService.send(BotErrors.ERROR_YOUTUBE_PROCESSING, chatId);
+    private void incrementYoutubeUsageIfFree(User user) {
+        if (Boolean.TRUE.equals(user.getIsPremium()) &&
+                user.getPremiumEnd() != null &&
+                LocalDateTime.now().isBefore(user.getPremiumEnd())) {
+            return;
         }
+        var now = LocalDate.now();
+        if (user.getYoutubeUsageDate() == null || !user.getYoutubeUsageDate().isEqual(now)) {
+            user.setYoutubeUsageDate(now);
+            user.setYoutubeUsageToday(1);
+            userService.save(user);
+        }
+    }
+
+    public void handleYoutubeUrl(User user, Long chatId, String messageText) {
+        concurrencyLimiter.executeLimited(() -> {
+            try {
+                var url = messageText.replace("/youtube", "").trim();
+                messageSenderService.send(BotSectionState.STATE_YOUTUBE_SUBTITLE_LOADING, chatId);
+                var subtitles = subtitleService.extractSubtitles(url, chatId);
+                if (subtitles == null || subtitles.isBlank()) {
+                    messageSenderService.send(BotErrors.ERROR_YOUTUBE_SUBTITLE_NOT_FOUND, chatId);
+                    return null;
+                }
+                incrementYoutubeUsageIfFree(user);
+                messageSenderService.send(BotSectionState.STATE_YOUTUBE_SUMMARIZING, chatId);
+                var summary = openAIClientApiService.summarizeText(subtitles);
+                messageSenderService.send(summary, chatId);
+            } catch (Exception e) {
+                log.error("Ошибка при обработке YouTube-видео: {}", e.getMessage(), e);
+                messageSenderService.send(BotErrors.ERROR_YOUTUBE_PROCESSING, chatId);
+            }
+            return null;
+        }, "youtube", chatId, msg -> messageSenderService.send(msg, chatId));
     }
 
     private boolean isValidYoutubeUrl(String url) {
