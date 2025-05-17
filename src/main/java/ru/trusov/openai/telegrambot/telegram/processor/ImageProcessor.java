@@ -86,9 +86,9 @@ public class ImageProcessor {
         userService.updateSettingImageEnum(user, size);
         userService.updateBotStateEnum(user, BotStateEnum.IMAGE);
         var msg = switch (size) {
-            case MINIMUM_SIZE -> BotSectionState.STATE_CHOICE_IMAGE_SIZE_SMALL;
-            case AVERAGE_SIZE -> BotSectionState.STATE_CHOICE_IMAGE_SIZE_MEDIUM;
-            case BIG_SIZE -> BotSectionState.STATE_CHOICE_IMAGE_SIZE_LARGE;
+            case SQUARE -> BotSectionState.STATE_CHOICE_IMAGE_SIZE_SQUARE;
+            case VERTICAL -> BotSectionState.STATE_CHOICE_IMAGE_SIZE_VERTICAL;
+            case HORIZONTAL -> BotSectionState.STATE_CHOICE_IMAGE_SIZE_HORIZONTAL;
         };
         messageSenderService.edit(msg, chatId, messageId);
     }

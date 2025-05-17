@@ -4,9 +4,9 @@ import lombok.Getter;
 
 @Getter
 public enum ImageSizeEnum {
-    MINIMUM_SIZE("256x256"),
-    AVERAGE_SIZE("512x512"),
-    BIG_SIZE("1024x1024");
+    SQUARE("1024x1024"),
+    VERTICAL("1024x1792"),
+    HORIZONTAL("1792x1024");
 
     private final String value;
 

@@ -11,9 +11,9 @@ public class InlineKeyboardSettingImageMaker {
 
     public InlineKeyboardMarkup getInlineMessageButtons() {
         var rowList = new ArrayList<List<InlineKeyboardButton>>();
-        rowList.add(getButton(BotOptions.OPTION_IMAGE_SIZE_MINIMUM, BotOptions.OPTION_IMAGE_SIZE_MINIMUM));
-        rowList.add(getButton(BotOptions.OPTION_IMAGE_SIZE_AVERAGE, BotOptions.OPTION_IMAGE_SIZE_AVERAGE));
-        rowList.add(getButton(BotOptions.OPTION_IMAGE_SIZE_LARGE, BotOptions.OPTION_IMAGE_SIZE_LARGE));
+        rowList.add(getButton(BotOptions.OPTION_IMAGE_SIZE_SQUARE, BotOptions.OPTION_IMAGE_SIZE_SQUARE));
+        rowList.add(getButton(BotOptions.OPTION_IMAGE_SIZE_VERTICAL, BotOptions.OPTION_IMAGE_SIZE_VERTICAL));
+        rowList.add(getButton(BotOptions.OPTION_IMAGE_SIZE_HORIZONTAL, BotOptions.OPTION_IMAGE_SIZE_HORIZONTAL));
         var inlineKeyboardMarkup = new InlineKeyboardMarkup();
         inlineKeyboardMarkup.setKeyboard(rowList);
         return inlineKeyboardMarkup;

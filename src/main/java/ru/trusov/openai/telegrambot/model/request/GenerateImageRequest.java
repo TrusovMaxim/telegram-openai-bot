@@ -17,4 +17,7 @@ public class GenerateImageRequest {
     @Min(1)
     @Max(10)
     private int n;
+    @NotBlank
+    private String model;
+    private String quality;
 }

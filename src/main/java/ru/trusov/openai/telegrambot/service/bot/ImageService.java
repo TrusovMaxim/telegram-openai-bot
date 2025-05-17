@@ -2,34 +2,29 @@ package ru.trusov.openai.telegrambot.service.bot;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 import ru.trusov.openai.telegrambot.model.enums.ImageSizeEnum;
 import ru.trusov.openai.telegrambot.model.request.GenerateImageRequest;
-import ru.trusov.openai.telegrambot.model.response.GenerateImageResponse;
+import ru.trusov.openai.telegrambot.service.openai.impl.OpenAIClientApiServiceImpl;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class ImageService {
-    @Value("${RESOURCE_OPEN_AI_URL_GENERATE_IMAGE}")
-    private String generateImageUrl;
+    private final OpenAIClientApiServiceImpl openAIClientApiService;
 
     public String generate(ImageSizeEnum size, String prompt) {
         try {
             var request = GenerateImageRequest.builder()
+                    .model("dall-e-3")
+                    .prompt(prompt)
                     .n(1)
                     .size(size.getValue())
-                    .prompt(prompt)
+                    .quality("hd")
                     .build();
-            var response = new RestTemplate().postForObject(
-                    generateImageUrl,
-                    request,
-                    GenerateImageResponse.class
-            );
+            var response = openAIClientApiService.generateImage(request);
             if (response == null || response.getData().isEmpty()) {
-                log.warn("Сервис генерации изображений вернул пустой ответ. Prompt: {}", prompt);
+                log.warn("OpenAI вернул пустой ответ. Prompt: {}", prompt);
                 throw new RuntimeException("Ошибка генерации изображения");
             }
             return response.getData().getFirst().getUrl();

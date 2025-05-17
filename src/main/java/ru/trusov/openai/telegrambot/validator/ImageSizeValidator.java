@@ -14,6 +14,6 @@ public class ImageSizeValidator implements ConstraintValidator<ValidImageSize, S
 
     @Override
     public boolean isValid(String enteredText, ConstraintValidatorContext constraintValidatorContext) {
-        return Objects.equals(enteredText, BotOptions.OPTION_IMAGE_SIZE_MINIMUM) | Objects.equals(enteredText, BotOptions.OPTION_IMAGE_SIZE_AVERAGE) | Objects.equals(enteredText, BotOptions.OPTION_IMAGE_SIZE_LARGE);
+        return Objects.equals(enteredText, BotOptions.OPTION_IMAGE_SIZE_SQUARE) | Objects.equals(enteredText, BotOptions.OPTION_IMAGE_SIZE_VERTICAL) | Objects.equals(enteredText, BotOptions.OPTION_IMAGE_SIZE_HORIZONTAL);
     }
 }

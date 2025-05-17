@@ -28,12 +28,12 @@ public class CallbackQueryHandler {
                     translatorProcessor.setMode(user, chatId, messageId, TranslatorTypeEnum.TRANSCRIPTION);
             case BotOptions.OPTION_VOICE_TRANSLATION ->
                     translatorProcessor.setMode(user, chatId, messageId, TranslatorTypeEnum.TRANSLATION);
-            case BotOptions.OPTION_IMAGE_SIZE_MINIMUM ->
-                    imageProcessor.setSize(user, chatId, messageId, ImageSizeEnum.MINIMUM_SIZE);
-            case BotOptions.OPTION_IMAGE_SIZE_AVERAGE ->
-                    imageProcessor.setSize(user, chatId, messageId, ImageSizeEnum.AVERAGE_SIZE);
-            case BotOptions.OPTION_IMAGE_SIZE_LARGE ->
-                    imageProcessor.setSize(user, chatId, messageId, ImageSizeEnum.BIG_SIZE);
+            case BotOptions.OPTION_IMAGE_SIZE_SQUARE ->
+                    imageProcessor.setSize(user, chatId, messageId, ImageSizeEnum.SQUARE);
+            case BotOptions.OPTION_IMAGE_SIZE_VERTICAL ->
+                    imageProcessor.setSize(user, chatId, messageId, ImageSizeEnum.VERTICAL);
+            case BotOptions.OPTION_IMAGE_SIZE_HORIZONTAL ->
+                    imageProcessor.setSize(user, chatId, messageId, ImageSizeEnum.HORIZONTAL);
         }
     }
 }
