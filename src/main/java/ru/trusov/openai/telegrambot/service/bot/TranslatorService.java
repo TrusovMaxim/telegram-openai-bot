@@ -3,6 +3,7 @@ package ru.trusov.openai.telegrambot.service.bot;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.HttpEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
@@ -34,7 +35,17 @@ public class TranslatorService {
         };
         try {
             var fileUrl = GetUrlVoice.getFileUrl(fileId);
-            var fsr = new DownloadFileVoice().downloadAsResource(fileUrl, chatId);
+            FileSystemResource fsr = null;
+            for (int attempt = 1; attempt <= 3; attempt++) {
+                fsr = new DownloadFileVoice().downloadAsResource(fileUrl, chatId);
+                if (fsr.getFile().exists() && fsr.getFile().length() > 0) break;
+                log.warn("Попытка {}: файл ещё не готов, ожидаю...", attempt);
+                Thread.sleep(1000L * attempt);
+            }
+            if (!fsr.getFile().exists()) {
+                log.error("Файл голосового сообщения не найден или пуст. chatId={}, fileId={}", chatId, fileId);
+                return BotErrors.ERROR_EMPTY_VOICE_MESSAGE;
+            }
             var map = new LinkedMultiValueMap<String, Object>();
             map.add("file", fsr);
             var headers = new HttpHeaders();
