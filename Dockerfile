@@ -12,7 +12,7 @@ RUN apt-get update && \
     curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp && \
     chmod +x /usr/local/bin/yt-dlp
 
-ENV JAVA_TOOL_OPTIONS="-Xmx350m"
+ENV JAVA_TOOL_OPTIONS="-Xmx4096m"
 
 COPY --from=builder /app/target/telegram-openai-bot-0.0.1-SNAPSHOT.jar app.jar
 CMD ["java", "-jar", "app.jar"]

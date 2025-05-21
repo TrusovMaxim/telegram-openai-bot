@@ -13,10 +13,10 @@ import java.util.function.Supplier;
 @Component
 public class ConcurrencyLimiter {
     private final Map<String, Semaphore> limiters = Map.of(
-            "chat_gpt", new Semaphore(10, true),
-            "voice", new Semaphore(5, true),
-            "youtube", new Semaphore(5, true),
-            "image_generation", new Semaphore(5, true)
+            "chat_gpt", new Semaphore(20, true),
+            "voice", new Semaphore(10, true),
+            "youtube", new Semaphore(10, true),
+            "image_generation", new Semaphore(10, true)
     );
 
     public <T> T executeLimited(Supplier<T> task, String taskName, Long chatId, Consumer<String> onWaitMessage) {
