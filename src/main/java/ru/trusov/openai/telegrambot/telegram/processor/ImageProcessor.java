@@ -42,17 +42,6 @@ public class ImageProcessor {
             return;
         }
         switch (action) {
-            case IMAGE -> messageSenderService.send(BotSectionState.STATE_CHAT_ALREADY_IN_SECTION, chatId);
-            case BALANCE ->
-                    messageSenderService.send(MessageFormat.format(BotMessages.MESSAGE_IMAGE_BALANCE_CURRENT, user.getImageBalance()), chatId);
-            case TRANSLATOR -> {
-                userService.updateBotStateEnum(user, BotStateEnum.TRANSLATOR);
-                if (user.getSettingTranslator() == null) {
-                    messageSenderService.sendTranslatorPrompt(chatId);
-                } else {
-                    messageSenderService.send(BotPrompts.PROMPT_VOICE_SEND, chatId);
-                }
-            }
             case CHAT_GPT -> {
                 userService.updateBotStateEnum(user, BotStateEnum.CHAT_GPT);
                 messageSenderService.send(BotSectionState.STATE_CHAT_SWITCHED_TO_GPT, chatId);
@@ -62,21 +51,28 @@ public class ImageProcessor {
                 userDataService.resetUserDialog(user);
                 messageSenderService.send(BotSectionState.STATE_CHAT_GPT_DIALOG_RESET + BotSectionState.STATE_CHAT_SWITCHED_TO_GPT, chatId);
             }
+            case TRANSLATOR -> {
+                userService.updateBotStateEnum(user, BotStateEnum.TRANSLATOR);
+                if (user.getSettingTranslator() == null) {
+                    messageSenderService.sendTranslatorPrompt(chatId);
+                } else {
+                    messageSenderService.send(BotPrompts.PROMPT_VOICE_SEND, chatId);
+                }
+            }
             case YOUTUBE -> {
                 userService.updateBotStateEnum(user, BotStateEnum.YOUTUBE);
                 messageSenderService.send(BotSectionState.STATE_CHAT_SWITCHED_TO_YOUTUBE, chatId);
             }
-            case INFO -> {
-                userService.updateBotStateEnum(user, BotStateEnum.CHAT_GPT);
-                messageSenderService.send(BotMessages.MESSAGE_INFO_INTRO, chatId);
-            }
+            case IMAGE -> messageSenderService.send(BotSectionState.STATE_CHAT_ALREADY_IN_SECTION, chatId);
+            case BALANCE -> messageSenderService.send(
+                    MessageFormat.format(BotMessages.MESSAGE_IMAGE_BALANCE_CURRENT, user.getImageBalance()), chatId);
+            case INFO -> messageSenderService.send(BotMessages.MESSAGE_INFO_INTRO, chatId);
             case FEEDBACK -> {
                 userService.updateBotStateEnum(user, BotStateEnum.FEEDBACK);
                 messageSenderService.send(BotPrompts.PROMPT_FEEDBACK_WRITE, chatId);
             }
             case SETTING_VOICE -> messageSenderService.sendTranslatorPrompt(chatId);
             case SETTING_IMAGE -> messageSenderService.sendImagePrompt(chatId);
-            case COMMANDS -> messageSenderService.send(BotMessages.MESSAGE_COMMAND_LIST, chatId);
             case DONATE -> messageSenderService.send(BotMessages.MESSAGE_DONATE_INFO, chatId);
             case ABOUT_AUTHOR -> messageSenderService.send(BotMessages.MESSAGE_ABOUT_AUTHOR, chatId);
         }
@@ -100,5 +96,9 @@ public class ImageProcessor {
             messageSenderService.sendImageLink(url, chatId);
             return null;
         }, "image_generation", chatId, msg -> messageSenderService.send(msg, chatId));
+    }
+
+    public void editSettings(Long chatId, Integer messageId) {
+        messageSenderService.editImageSettings(chatId, messageId);
     }
 }

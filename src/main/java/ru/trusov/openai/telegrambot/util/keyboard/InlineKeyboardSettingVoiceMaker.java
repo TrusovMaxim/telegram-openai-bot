@@ -13,6 +13,7 @@ public class InlineKeyboardSettingVoiceMaker {
         var rowList = new ArrayList<List<InlineKeyboardButton>>();
         rowList.add(getButton(BotOptions.OPTION_VOICE_TRANSCRIPTION, BotOptions.OPTION_VOICE_TRANSCRIPTION));
         rowList.add(getButton(BotOptions.OPTION_VOICE_TRANSLATION, BotOptions.OPTION_VOICE_TRANSLATION));
+        rowList.add(getButton(BotOptions.OPTION_BACK_TO_SETTINGS_MENU, BotOptions.OPTION_BACK_TO_SETTINGS_MENU));
         var inlineKeyboardMarkup = new InlineKeyboardMarkup();
         inlineKeyboardMarkup.setKeyboard(rowList);
         return inlineKeyboardMarkup;

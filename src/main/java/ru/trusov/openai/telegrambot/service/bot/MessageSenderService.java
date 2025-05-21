@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.invoices.SendInvoice;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.payments.LabeledPrice;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
@@ -14,9 +15,7 @@ import ru.trusov.openai.telegrambot.constant.BotErrors;
 import ru.trusov.openai.telegrambot.constant.BotMessages;
 import ru.trusov.openai.telegrambot.constant.BotSectionState;
 import ru.trusov.openai.telegrambot.constant.BotTemplates;
-import ru.trusov.openai.telegrambot.util.keyboard.InlineKeyboardSettingImageMaker;
-import ru.trusov.openai.telegrambot.util.keyboard.InlineKeyboardSettingVoiceMaker;
-import ru.trusov.openai.telegrambot.util.keyboard.ReplyKeyboardMaker;
+import ru.trusov.openai.telegrambot.util.keyboard.*;
 
 import java.text.MessageFormat;
 import java.util.List;
@@ -35,6 +34,7 @@ public class MessageSenderService {
                     .chatId(chatId)
                     .text(text)
                     .build();
+            message.enableHtml(true);
             telegramBot.execute(message);
         } catch (TelegramApiException e) {
             log.error("Ошибка при отправке сообщения в чат {}: {}", chatId, e.getMessage(), e);
@@ -49,6 +49,7 @@ public class MessageSenderService {
                     .messageId(messageId)
                     .text(text)
                     .build();
+            message.enableHtml(true);
             telegramBot.execute(message);
         } catch (TelegramApiException e) {
             log.error("Ошибка при редактировании сообщения в чате {}, messageId {}: {}", chatId, messageId, e.getMessage(), e);
@@ -62,6 +63,7 @@ public class MessageSenderService {
                 .text(BotMessages.MESSAGE_INFO_INTRO)
                 .replyMarkup(new ReplyKeyboardMaker().getMainMenuKeyboard())
                 .build();
+        message.enableHtml(true);
         try {
             telegramBot.execute(message);
         } catch (TelegramApiException e) {
@@ -76,6 +78,7 @@ public class MessageSenderService {
                 .text(BotSectionState.STATE_CHOICE_IMAGE_SIZE_PROMPT)
                 .replyMarkup(new InlineKeyboardSettingImageMaker().getInlineMessageButtons())
                 .build();
+        message.enableHtml(true);
         try {
             telegramBot.execute(message);
         } catch (TelegramApiException e) {
@@ -94,6 +97,7 @@ public class MessageSenderService {
                 .text(BotSectionState.STATE_CHOICE_TRANSLATION_PROMPT)
                 .replyMarkup(new InlineKeyboardSettingVoiceMaker().getInlineMessageButtons())
                 .build();
+        message.enableHtml(true);
         try {
             telegramBot.execute(message);
         } catch (TelegramApiException e) {
@@ -137,6 +141,90 @@ public class MessageSenderService {
         } catch (TelegramApiException e) {
             log.error("Ошибка при отправке инвойса на изображения: {}", e.getMessage(), e);
             send(BotErrors.ERROR_IMAGE_PAYMENT_FAILED, chatId);
+        }
+    }
+
+    public void editVoiceSettings(Long chatId, Integer messageId) {
+        var message = EditMessageText.builder()
+                .chatId(chatId)
+                .messageId(messageId)
+                .text(BotSectionState.STATE_CHOICE_TRANSLATION_PROMPT)
+                .replyMarkup(new InlineKeyboardSettingVoiceMaker().getInlineMessageButtons())
+                .build();
+        message.enableHtml(true);
+        try {
+            telegramBot.execute(message);
+        } catch (TelegramApiException e) {
+            log.error("Ошибка при редактировании сообщения (настройки перевода) в чат {}: {}", chatId, e.getMessage(), e);
+        }
+    }
+
+    public void editImageSettings(Long chatId, Integer messageId) {
+        var message = EditMessageText.builder()
+                .chatId(chatId)
+                .messageId(messageId)
+                .text(BotSectionState.STATE_CHOICE_IMAGE_SIZE_PROMPT)
+                .replyMarkup(new InlineKeyboardSettingImageMaker().getInlineMessageButtons())
+                .build();
+        message.enableHtml(true);
+        try {
+            telegramBot.execute(message);
+        } catch (TelegramApiException e) {
+            log.error("Ошибка при редактировании сообщения (настройки изображения) в чат {}: {}", chatId, e.getMessage(), e);
+        }
+    }
+
+    public void sendSettingsMenu(Long chatId) {
+        var message = SendMessage.builder()
+                .chatId(chatId)
+                .text(BotSectionState.STATE_SETTINGS_PROMPT)
+                .replyMarkup(new InlineKeyboardSettingsMenuMaker().getInlineSettingsMenu())
+                .build();
+        message.enableHtml(true);
+        try {
+            telegramBot.execute(message);
+        } catch (TelegramApiException e) {
+            log.error("Ошибка при отправке меню настроек в чат {}: {}", chatId, e.getMessage(), e);
+            throw new RuntimeException("Не удалось отправить меню настроек", e);
+        }
+    }
+
+    public void editSettingsMenu(Long chatId, Integer messageId) {
+        var message = EditMessageText.builder()
+                .chatId(chatId)
+                .messageId(messageId)
+                .text(BotSectionState.STATE_SETTINGS_PROMPT)
+                .replyMarkup(new InlineKeyboardSettingsMenuMaker().getInlineSettingsMenu())
+                .build();
+        message.enableHtml(true);
+        try {
+            telegramBot.execute(message);
+        } catch (TelegramApiException e) {
+            log.error("Ошибка при редактировании меню настроек в чат {}: {}", chatId, e.getMessage(), e);
+            throw new RuntimeException("Не удалось изменить меню настроек", e);
+        }
+    }
+
+    public void sendCommandMenu(Long chatId) {
+        var message = SendMessage.builder()
+                .chatId(chatId)
+                .text("📜 Доступные команды:")
+                .replyMarkup(new InlineKeyboardCommandMenuMaker().getCommandMenu())
+                .build();
+        message.enableHtml(true);
+        try {
+            telegramBot.execute(message);
+        } catch (TelegramApiException e) {
+            log.error("Ошибка при отправке меню команд в чат {}: {}", chatId, e.getMessage(), e);
+            throw new RuntimeException("Не удалось отправить меню команд", e);
+        }
+    }
+
+    public void deleteMessage(Long chatId, Integer messageId) {
+        try {
+            telegramBot.execute(new DeleteMessage(chatId.toString(), messageId));
+        } catch (TelegramApiException e) {
+            log.error("Ошибка при удалении сообщения в чате {}: {}", chatId, e.getMessage(), e);
         }
     }
 }

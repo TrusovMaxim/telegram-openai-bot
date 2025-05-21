@@ -14,6 +14,7 @@ public class InlineKeyboardSettingImageMaker {
         rowList.add(getButton(BotOptions.OPTION_IMAGE_SIZE_SQUARE, BotOptions.OPTION_IMAGE_SIZE_SQUARE));
         rowList.add(getButton(BotOptions.OPTION_IMAGE_SIZE_VERTICAL, BotOptions.OPTION_IMAGE_SIZE_VERTICAL));
         rowList.add(getButton(BotOptions.OPTION_IMAGE_SIZE_HORIZONTAL, BotOptions.OPTION_IMAGE_SIZE_HORIZONTAL));
+        rowList.add(getButton(BotOptions.OPTION_BACK_TO_SETTINGS_MENU, BotOptions.OPTION_BACK_TO_SETTINGS_MENU));
         var inlineKeyboardMarkup = new InlineKeyboardMarkup();
         inlineKeyboardMarkup.setKeyboard(rowList);
         return inlineKeyboardMarkup;

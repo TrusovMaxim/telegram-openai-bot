@@ -46,12 +46,20 @@ public class TextMessageHandler {
             messageSenderService.sendImageInvoice(chatId);
             return;
         }
+        if ("/commands".equalsIgnoreCase(text)) {
+            messageSenderService.sendCommandMenu(chatId);
+            return;
+        }
         var action = UserActionPathEnum.parse(text);
         if (user == null) {
             var from = update.getMessage().getFrom();
             userService.registerUser(from.getUserName(), from.getFirstName(), from.getLastName(), chatId);
             messageSenderService.sendCommandList(chatId);
         } else {
+            if (action == UserActionPathEnum.SETTINGS) {
+                messageSenderService.sendSettingsMenu(chatId);
+                return;
+            }
             actionSwitcher.route(user, chatId, text, action);
         }
     }

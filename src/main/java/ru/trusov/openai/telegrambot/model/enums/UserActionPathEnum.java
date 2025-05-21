@@ -8,17 +8,20 @@ import java.util.Arrays;
 @Getter
 @RequiredArgsConstructor
 public enum UserActionPathEnum {
-    TRANSLATOR("/translator"),
     CHAT_GPT("/gpt"),
     RESET_GPT_DIALOG("/gpt_reset"),
+    TRANSLATOR("/translator"),
+    YOUTUBE("/youtube"),
+    IMAGE("/image"),
+    SETTINGS("/settings"),
+    BUY_IMAGES("/buy_images"),
+    BALANCE("/balance"),
+    BUY_PREMIUM("/buy_premium"),
     INFO("/info"),
     FEEDBACK("/feedback"),
-    SETTING_VOICE("/setting_voice"),
     COMMANDS("/commands"),
-    IMAGE("/image"),
+    SETTING_VOICE("/setting_voice"),
     SETTING_IMAGE("/setting_image"),
-    YOUTUBE("/youtube"),
-    BALANCE("/balance"),
     DONATE("Донат"),
     ABOUT_AUTHOR("Об авторе");
 

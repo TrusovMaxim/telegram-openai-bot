@@ -35,7 +35,12 @@ public class ChatGptProcessor {
             return;
         }
         switch (action) {
-            case CHAT_GPT -> messageSenderService.send(BotSectionState.STATE_CHAT_ALREADY_ACTIVATED, chatId);
+            case CHAT_GPT -> messageSenderService.send(BotSectionState.STATE_CHAT_ALREADY_IN_SECTION, chatId);
+            case RESET_GPT_DIALOG -> {
+                userService.updateBotStateEnum(user, BotStateEnum.CHAT_GPT);
+                userDataService.resetUserDialog(user);
+                messageSenderService.send(BotSectionState.STATE_CHAT_GPT_DIALOG_RESET + BotSectionState.STATE_CHAT_SWITCHED_TO_GPT, chatId);
+            }
             case TRANSLATOR -> {
                 userService.updateBotStateEnum(user, BotStateEnum.TRANSLATOR);
                 if (user.getSettingTranslator() == null) {
@@ -44,10 +49,9 @@ public class ChatGptProcessor {
                     messageSenderService.send(BotPrompts.PROMPT_VOICE_SEND, chatId);
                 }
             }
-            case RESET_GPT_DIALOG -> {
-                userService.updateBotStateEnum(user, BotStateEnum.CHAT_GPT);
-                userDataService.resetUserDialog(user);
-                messageSenderService.send(BotSectionState.STATE_CHAT_GPT_DIALOG_RESET + BotSectionState.STATE_CHAT_SWITCHED_TO_GPT, chatId);
+            case YOUTUBE -> {
+                userService.updateBotStateEnum(user, BotStateEnum.YOUTUBE);
+                messageSenderService.send(BotSectionState.STATE_CHAT_SWITCHED_TO_YOUTUBE, chatId);
             }
             case IMAGE -> {
                 userService.updateBotStateEnum(user, BotStateEnum.IMAGE);
@@ -57,23 +61,15 @@ public class ChatGptProcessor {
                     messageSenderService.send(BotPrompts.PROMPT_IMAGE_DESCRIPTION_REQUEST, chatId);
                 }
             }
-            case BALANCE ->
-                    messageSenderService.send(MessageFormat.format(BotMessages.MESSAGE_IMAGE_BALANCE_CURRENT, user.getImageBalance()), chatId);
-            case YOUTUBE -> {
-                userService.updateBotStateEnum(user, BotStateEnum.YOUTUBE);
-                messageSenderService.send(BotSectionState.STATE_CHAT_SWITCHED_TO_YOUTUBE, chatId);
-            }
-            case INFO -> {
-                userService.updateBotStateEnum(user, BotStateEnum.CHAT_GPT);
-                messageSenderService.send(BotMessages.MESSAGE_INFO_INTRO, chatId);
-            }
+            case BALANCE -> messageSenderService.send(
+                    MessageFormat.format(BotMessages.MESSAGE_IMAGE_BALANCE_CURRENT, user.getImageBalance()), chatId);
+            case INFO -> messageSenderService.send(BotMessages.MESSAGE_INFO_INTRO, chatId);
             case FEEDBACK -> {
                 userService.updateBotStateEnum(user, BotStateEnum.FEEDBACK);
                 messageSenderService.send(BotPrompts.PROMPT_FEEDBACK_WRITE, chatId);
             }
             case SETTING_VOICE -> messageSenderService.sendTranslatorPrompt(chatId);
             case SETTING_IMAGE -> messageSenderService.sendImagePrompt(chatId);
-            case COMMANDS -> messageSenderService.send(BotMessages.MESSAGE_COMMAND_LIST, chatId);
             case DONATE -> messageSenderService.send(BotMessages.MESSAGE_DONATE_INFO, chatId);
             case ABOUT_AUTHOR -> messageSenderService.send(BotMessages.MESSAGE_ABOUT_AUTHOR, chatId);
         }

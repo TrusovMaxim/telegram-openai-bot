@@ -44,7 +44,6 @@ public class TranslatorProcessor {
             return;
         }
         switch (action) {
-            case TRANSLATOR -> messageSenderService.send(BotSectionState.STATE_CHAT_ALREADY_IN_SECTION, chatId);
             case CHAT_GPT -> {
                 userService.updateBotStateEnum(user, BotStateEnum.CHAT_GPT);
                 messageSenderService.send(BotSectionState.STATE_CHAT_SWITCHED_TO_GPT, chatId);
@@ -54,6 +53,11 @@ public class TranslatorProcessor {
                 userDataService.resetUserDialog(user);
                 messageSenderService.send(BotSectionState.STATE_CHAT_GPT_DIALOG_RESET + BotSectionState.STATE_CHAT_SWITCHED_TO_GPT, chatId);
             }
+            case TRANSLATOR -> messageSenderService.send(BotSectionState.STATE_CHAT_ALREADY_IN_SECTION, chatId);
+            case YOUTUBE -> {
+                userService.updateBotStateEnum(user, BotStateEnum.YOUTUBE);
+                messageSenderService.send(BotSectionState.STATE_CHAT_SWITCHED_TO_YOUTUBE, chatId);
+            }
             case IMAGE -> {
                 userService.updateBotStateEnum(user, BotStateEnum.IMAGE);
                 if (user.getSettingImage() == null) {
@@ -62,23 +66,15 @@ public class TranslatorProcessor {
                     messageSenderService.send(BotPrompts.PROMPT_IMAGE_DESCRIPTION_REQUEST, chatId);
                 }
             }
-            case BALANCE ->
-                    messageSenderService.send(MessageFormat.format(BotMessages.MESSAGE_IMAGE_BALANCE_CURRENT, user.getImageBalance()), chatId);
-            case YOUTUBE -> {
-                userService.updateBotStateEnum(user, BotStateEnum.YOUTUBE);
-                messageSenderService.send(BotSectionState.STATE_CHAT_SWITCHED_TO_YOUTUBE, chatId);
-            }
-            case INFO -> {
-                userService.updateBotStateEnum(user, BotStateEnum.CHAT_GPT);
-                messageSenderService.send(BotMessages.MESSAGE_INFO_INTRO, chatId);
-            }
+            case BALANCE -> messageSenderService.send(
+                    MessageFormat.format(BotMessages.MESSAGE_IMAGE_BALANCE_CURRENT, user.getImageBalance()), chatId);
+            case INFO -> messageSenderService.send(BotMessages.MESSAGE_INFO_INTRO, chatId);
             case FEEDBACK -> {
                 userService.updateBotStateEnum(user, BotStateEnum.FEEDBACK);
                 messageSenderService.send(BotPrompts.PROMPT_FEEDBACK_WRITE, chatId);
             }
             case SETTING_VOICE -> messageSenderService.sendTranslatorPrompt(chatId);
             case SETTING_IMAGE -> messageSenderService.sendImagePrompt(chatId);
-            case COMMANDS -> messageSenderService.send(BotMessages.MESSAGE_COMMAND_LIST, chatId);
             case DONATE -> messageSenderService.send(BotMessages.MESSAGE_DONATE_INFO, chatId);
             case ABOUT_AUTHOR -> messageSenderService.send(BotMessages.MESSAGE_ABOUT_AUTHOR, chatId);
         }
@@ -91,5 +87,9 @@ public class TranslatorProcessor {
                 ? BotSectionState.STATE_CHOICE_TRANSLATION_RESPONSE
                 : BotSectionState.STATE_CHOICE_TRANSCRIPTION_RESPONSE;
         messageSenderService.edit(msg, chatId, messageId);
+    }
+
+    public void editSettings(Long chatId, Integer messageId) {
+        messageSenderService.editVoiceSettings(chatId, messageId);
     }
 }
