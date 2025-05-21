@@ -26,6 +26,17 @@ public class ActionSwitcher {
     private final UserService userService;
 
     public void route(User user, Long chatId, String text, UserActionPathEnum action) {
+        if (action == null) {
+            switch (user.getBotStateEnum()) {
+                case START -> startProcessor.process(user, chatId, null);
+                case CHAT_GPT -> chatGptProcessor.process(user, chatId, text, null);
+                case IMAGE -> imageProcessor.process(user, chatId, text, null);
+                case TRANSLATOR -> translatorProcessor.process(user, chatId, null);
+                case YOUTUBE -> youtubeProcessor.process(user, chatId, text, null);
+                case FEEDBACK -> feedbackProcessor.process(user, chatId, text, null);
+            }
+            return;
+        }
         switch (action) {
             case SETTINGS -> {
                 messageSenderService.sendSettingsMenu(chatId);
