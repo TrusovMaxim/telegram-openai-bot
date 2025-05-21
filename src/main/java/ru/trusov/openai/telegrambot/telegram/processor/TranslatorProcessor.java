@@ -40,7 +40,7 @@ public class TranslatorProcessor {
 
     public void process(User user, Long chatId, UserActionPathEnum action) {
         if (action == null) {
-            messageSenderService.send(BotPrompts.PROMPT_VOICE_REQUIRED, chatId);
+            messageSenderService.send(BotErrors.ERROR_VOICE_REQUIRED, chatId);
             return;
         }
         switch (action) {
@@ -51,7 +51,7 @@ public class TranslatorProcessor {
             case RESET_GPT_DIALOG -> {
                 userService.updateBotStateEnum(user, BotStateEnum.CHAT_GPT);
                 userDataService.resetUserDialog(user);
-                messageSenderService.send(BotSectionState.STATE_CHAT_GPT_DIALOG_RESET + BotSectionState.STATE_CHAT_SWITCHED_TO_GPT, chatId);
+                messageSenderService.send(BotSectionState.STATE_CHAT_GPT_DIALOG_RESET, chatId);
             }
             case TRANSLATOR -> messageSenderService.send(BotSectionState.STATE_CHAT_ALREADY_IN_SECTION, chatId);
             case YOUTUBE -> {
@@ -63,12 +63,12 @@ public class TranslatorProcessor {
                 if (user.getSettingImage() == null) {
                     messageSenderService.sendImagePrompt(chatId);
                 } else {
-                    messageSenderService.send(BotPrompts.PROMPT_IMAGE_DESCRIPTION_REQUEST, chatId);
+                    messageSenderService.send(BotSectionState.STATE_CHAT_SWITCHED_TO_IMAGE, chatId);
                 }
             }
             case BALANCE -> messageSenderService.send(
                     MessageFormat.format(BotMessages.MESSAGE_IMAGE_BALANCE_CURRENT, user.getImageBalance()), chatId);
-            case INFO -> messageSenderService.send(BotMessages.MESSAGE_INFO_INTRO, chatId);
+            case INFO -> messageSenderService.sendInfoWithButtons(chatId);
             case FEEDBACK -> {
                 userService.updateBotStateEnum(user, BotStateEnum.FEEDBACK);
                 messageSenderService.send(BotPrompts.PROMPT_FEEDBACK_WRITE, chatId);

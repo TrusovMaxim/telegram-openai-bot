@@ -54,7 +54,7 @@ public class TextMessageHandler {
         if (user == null) {
             var from = update.getMessage().getFrom();
             userService.registerUser(from.getUserName(), from.getFirstName(), from.getLastName(), chatId);
-            messageSenderService.sendCommandList(chatId);
+            messageSenderService.sendWelcomeWithMenu(chatId);
         } else {
             if (action == UserActionPathEnum.SETTINGS) {
                 messageSenderService.sendSettingsMenu(chatId);

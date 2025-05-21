@@ -62,7 +62,7 @@ public class ActionSwitcher {
                 return;
             }
             case INFO -> {
-                messageSenderService.send(BotMessages.MESSAGE_INFO_INTRO, chatId);
+                messageSenderService.sendInfoWithButtons(chatId);
                 return;
             }
             case FEEDBACK -> {

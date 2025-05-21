@@ -35,14 +35,14 @@ public class StartProcessor {
             case RESET_GPT_DIALOG -> {
                 userService.updateBotStateEnum(user, BotStateEnum.CHAT_GPT);
                 userDataService.resetUserDialog(user);
-                messageSenderService.send(BotSectionState.STATE_CHAT_GPT_DIALOG_RESET + BotSectionState.STATE_CHAT_SWITCHED_TO_GPT, chatId);
+                messageSenderService.send(BotSectionState.STATE_CHAT_GPT_DIALOG_RESET, chatId);
             }
             case TRANSLATOR -> {
                 userService.updateBotStateEnum(user, BotStateEnum.TRANSLATOR);
                 if (user.getSettingTranslator() == null) {
                     messageSenderService.sendTranslatorPrompt(chatId);
                 } else {
-                    messageSenderService.send(BotPrompts.PROMPT_VOICE_SEND, chatId);
+                    messageSenderService.send(BotSectionState.STATE_CHAT_SWITCHED_TO_TRANSLATOR, chatId);
                 }
             }
             case YOUTUBE -> {
@@ -54,7 +54,7 @@ public class StartProcessor {
                 if (user.getSettingImage() == null) {
                     messageSenderService.sendImagePrompt(chatId);
                 } else {
-                    messageSenderService.send(BotPrompts.PROMPT_IMAGE_DESCRIPTION_REQUEST, chatId);
+                    messageSenderService.send(BotSectionState.STATE_CHAT_SWITCHED_TO_IMAGE, chatId);
                 }
             }
             case SETTINGS -> messageSenderService.sendSettingsMenu(chatId);
@@ -62,7 +62,7 @@ public class StartProcessor {
             case BALANCE -> messageSenderService.send(
                     MessageFormat.format(BotMessages.MESSAGE_IMAGE_BALANCE_CURRENT, user.getImageBalance()), chatId);
             case BUY_PREMIUM -> messageSenderService.sendPremiumInvoice(chatId);
-            case INFO -> messageSenderService.send(BotMessages.MESSAGE_INFO_INTRO, chatId);
+            case INFO -> messageSenderService.sendInfoWithButtons(chatId);
             case FEEDBACK -> {
                 userService.updateBotStateEnum(user, BotStateEnum.FEEDBACK);
                 messageSenderService.send(BotPrompts.PROMPT_FEEDBACK_WRITE, chatId);

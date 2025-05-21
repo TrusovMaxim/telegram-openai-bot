@@ -57,7 +57,7 @@ public class MessageSenderService {
         }
     }
 
-    public void sendCommandList(Long chatId) {
+    public void sendWelcomeWithMenu(Long chatId) {
         var message = SendMessage.builder()
                 .chatId(chatId)
                 .text(BotMessages.MESSAGE_INFO_INTRO)
@@ -225,6 +225,21 @@ public class MessageSenderService {
             telegramBot.execute(new DeleteMessage(chatId.toString(), messageId));
         } catch (TelegramApiException e) {
             log.error("Ошибка при удалении сообщения в чате {}: {}", chatId, e.getMessage(), e);
+        }
+    }
+
+    public void sendInfoWithButtons(Long chatId) {
+        var message = SendMessage.builder()
+                .chatId(chatId)
+                .text(BotMessages.MESSAGE_INFO)
+                .replyMarkup(new InlineKeyboardInfoMenuMaker().getInfoKeyboard())
+                .build();
+        message.enableHtml(true);
+        try {
+            telegramBot.execute(message);
+        } catch (TelegramApiException e) {
+            log.error("Ошибка при отправке информации /info в чат {}: {}", chatId, e.getMessage(), e);
+            throw new RuntimeException("Не удалось отправить информацию", e);
         }
     }
 }
