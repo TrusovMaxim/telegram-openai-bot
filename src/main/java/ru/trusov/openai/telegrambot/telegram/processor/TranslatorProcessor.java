@@ -15,6 +15,7 @@ import ru.trusov.openai.telegrambot.service.bot.MessageSenderService;
 import ru.trusov.openai.telegrambot.service.bot.TranslatorService;
 import ru.trusov.openai.telegrambot.service.user.UserDataService;
 import ru.trusov.openai.telegrambot.service.user.UserService;
+import ru.trusov.openai.telegrambot.util.file.ConcurrencyLimiter;
 
 import java.text.MessageFormat;
 
@@ -25,6 +26,7 @@ public class TranslatorProcessor {
     private final UserDataService userDataService;
     private final MessageSenderService messageSenderService;
     private final TranslatorService translatorService;
+    private final ConcurrencyLimiter concurrencyLimiter;
 
     public void process(User user, Voice voice, Long chatId) {
         if (voice.getDuration() > 600) {
@@ -33,8 +35,13 @@ public class TranslatorProcessor {
             userService.updateBotStateEnum(user, BotStateEnum.TRANSLATOR);
             messageSenderService.sendTranslatorPrompt(chatId);
         } else {
-            String responseText = translatorService.translate(user.getSettingTranslator(), voice.getFileId(), chatId);
-            messageSenderService.send(responseText, chatId);
+            var taskType = "voice";
+            var userId = user.getId();
+            concurrencyLimiter.executeLimited(() -> {
+                var responseText = translatorService.translate(user.getSettingTranslator(), voice.getFileId(), chatId);
+                messageSenderService.send(responseText, chatId);
+                return null;
+            }, taskType, userId, chatId, msg -> messageSenderService.send(msg, chatId));
         }
     }
 

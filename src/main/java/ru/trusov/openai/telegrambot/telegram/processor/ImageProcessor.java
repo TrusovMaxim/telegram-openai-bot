@@ -90,12 +90,14 @@ public class ImageProcessor {
     }
 
     private void generate(User user, Long chatId, String prompt) {
+        var userId = user.getId();
+        var taskType = "image_generation";
         concurrencyLimiter.executeLimited(() -> {
             messageSenderService.send(BotSectionState.STATE_REQUEST_IMAGE_SENT, chatId);
             var url = imageService.generate(user.getSettingImage(), prompt);
             messageSenderService.sendImageLink(url, chatId);
             return null;
-        }, "image_generation", chatId, msg -> messageSenderService.send(msg, chatId));
+        }, taskType, userId, chatId, msg -> messageSenderService.send(msg, chatId));
     }
 
     public void editSettings(Long chatId, Integer messageId) {

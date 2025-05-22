@@ -115,6 +115,8 @@ public class YoutubeProcessor {
     }
 
     public void handleYoutubeUrl(User user, Long chatId, String messageText) {
+        var userId = user.getId();
+        var taskType = "youtube";
         concurrencyLimiter.executeLimited(() -> {
             try {
                 var url = messageText.replace("/youtube", "").trim();
@@ -133,7 +135,7 @@ public class YoutubeProcessor {
                 messageSenderService.send(BotErrors.ERROR_YOUTUBE_PROCESSING, chatId);
             }
             return null;
-        }, "youtube", chatId, msg -> messageSenderService.send(msg, chatId));
+        }, taskType, userId, chatId, msg -> messageSenderService.send(msg, chatId));
     }
 
     private boolean isValidYoutubeUrl(String url) {

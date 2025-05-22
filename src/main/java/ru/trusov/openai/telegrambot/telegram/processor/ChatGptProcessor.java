@@ -85,6 +85,9 @@ public class ChatGptProcessor {
                 user.getPremiumEnd() != null &&
                 LocalDateTime.now().isBefore(user.getPremiumEnd());
         var today = LocalDate.now();
+        var userId = user.getId();
+        var chatId = user.getChatId();
+        var taskType = "chat_gpt";
         if (!isPremium) {
             if (data.getDialogDate() == null || !data.getDialogDate().isEqual(today)) {
                 data.setDialogDate(today);
@@ -95,13 +98,14 @@ public class ChatGptProcessor {
             }
             data.setDialogUsageToday(data.getDialogUsageToday() + 1);
             userDataService.save(data);
-            messageSenderService.send(BotSectionState.STATE_REQUEST_SENT, user.getChatId());
+            messageSenderService.send(BotSectionState.STATE_REQUEST_SENT, chatId);
             var prompt = "User: " + userText;
             return concurrencyLimiter.executeLimited(
                     () -> OpenAIClient.runOpenAI(prompt),
-                    "chat_gpt",
-                    user.getChatId(),
-                    msg -> messageSenderService.send(msg, user.getChatId())
+                    taskType,
+                    userId,
+                    chatId,
+                    msg -> messageSenderService.send(msg, chatId)
             );
         }
         var currentData = data.getData();
@@ -112,12 +116,13 @@ public class ChatGptProcessor {
             userDataService.save(data);
             return BotWarnings.WARNING_DIALOG_TOO_LONG;
         }
-        messageSenderService.send(BotSectionState.STATE_REQUEST_SENT, user.getChatId());
+        messageSenderService.send(BotSectionState.STATE_REQUEST_SENT, chatId);
         var answer = concurrencyLimiter.executeLimited(
                 () -> OpenAIClient.runOpenAI(promptToSend),
-                "chat_gpt",
-                user.getChatId(),
-                msg -> messageSenderService.send(msg, user.getChatId())
+                taskType,
+                userId,
+                chatId,
+                msg -> messageSenderService.send(msg, chatId)
         );
         var updatedData = promptToSend + "\nBot: " + answer;
         data.setData(updatedData);

@@ -3,6 +3,7 @@ package ru.trusov.openai.telegrambot.util.file;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import ru.trusov.openai.telegrambot.constant.BotSectionState;
+import ru.trusov.openai.telegrambot.monitoring.ConcurrencyMonitor;
 
 import java.util.Map;
 import java.util.concurrent.Semaphore;
@@ -19,23 +20,30 @@ public class ConcurrencyLimiter {
             "image_generation", new Semaphore(10, true)
     );
 
-    public <T> T executeLimited(Supplier<T> task, String taskName, Long chatId, Consumer<String> onWaitMessage) {
+    public <T> T executeLimited(Supplier<T> task, String taskName, Long userId, Long chatId, Consumer<String> onWaitMessage) {
         var semaphore = limiters.getOrDefault(taskName, new Semaphore(5, true));
+        var start = ConcurrencyMonitor.start(taskName);
         try {
             var waiting = semaphore.getQueueLength();
             if (waiting > 0 && onWaitMessage != null) {
                 onWaitMessage.accept(BotSectionState.STATE_WAITING_QUEUE_PREFIX + waiting + " задач перед вами.");
             }
-            log.debug("Ожидание слота: {} (chatId={})", taskName, chatId);
-            semaphore.acquire();
-            log.debug("Выполняется: {} (chatId={})", taskName, chatId);
+            var acquired = semaphore.tryAcquire();
+            if (!acquired) {
+                ConcurrencyMonitor.logQueueFull(taskName, userId, chatId);
+                if (onWaitMessage != null) {
+                    onWaitMessage.accept("⏳ Сейчас слишком много запросов. Пожалуйста, подождите.");
+                }
+                return null;
+            }
+            ConcurrencyMonitor.logAcquired(taskName, userId, chatId);
             return task.get();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException("Внутренняя ошибка. Попробуйте позже.");
+        } catch (Exception e) {
+            throw new RuntimeException("Внутренняя ошибка. Попробуйте позже.", e);
         } finally {
             semaphore.release();
-            log.debug("Завершено: {} (chatId={})", taskName, chatId);
+            ConcurrencyMonitor.logReleased(taskName, userId, chatId);
+            ConcurrencyMonitor.finish(taskName, start, userId, chatId);
         }
     }
 }
