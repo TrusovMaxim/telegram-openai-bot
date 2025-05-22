@@ -6,8 +6,9 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum ButtonNameEnum {
-    ABOUT("👤 Об авторе"),
-    DONATE("💸 Донат");
+    DONATE("💸 Донат", "donate"),
+    ABOUT("👤 Об авторе", "about_author");
 
     private final String buttonName;
+    private final String commandName;
 }

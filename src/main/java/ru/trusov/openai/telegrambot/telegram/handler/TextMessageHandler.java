@@ -6,6 +6,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import ru.trusov.openai.telegrambot.constant.BotErrors;
 import ru.trusov.openai.telegrambot.constant.BotMessages;
 import ru.trusov.openai.telegrambot.model.entity.User;
+import ru.trusov.openai.telegrambot.model.enums.ButtonNameEnum;
 import ru.trusov.openai.telegrambot.model.enums.UserActionPathEnum;
 import ru.trusov.openai.telegrambot.service.bot.MessageSenderService;
 import ru.trusov.openai.telegrambot.service.user.UserService;
@@ -49,6 +50,13 @@ public class TextMessageHandler {
         if ("/commands".equalsIgnoreCase(text)) {
             messageSenderService.sendCommandMenu(chatId);
             return;
+        }
+        for (ButtonNameEnum button : ButtonNameEnum.values()) {
+            if (text.equalsIgnoreCase(button.getButtonName())) {
+                var action = UserActionPathEnum.parse(button.getCommandName());
+                actionSwitcher.route(user, chatId, text, action);
+                return;
+            }
         }
         var action = UserActionPathEnum.parse(text);
         if (user == null) {

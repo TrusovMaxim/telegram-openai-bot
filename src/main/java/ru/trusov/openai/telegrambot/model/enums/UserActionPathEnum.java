@@ -22,8 +22,8 @@ public enum UserActionPathEnum {
     COMMANDS("/commands"),
     SETTING_VOICE("/setting_voice"),
     SETTING_IMAGE("/setting_image"),
-    DONATE("Донат"),
-    ABOUT_AUTHOR("Об авторе");
+    DONATE("donate"),
+    ABOUT_AUTHOR("about_author");
 
     private final String command;
 
