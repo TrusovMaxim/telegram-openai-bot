@@ -1,7 +1,9 @@
 package ru.trusov.openai.telegrambot.telegram.processor;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import ru.trusov.openai.telegrambot.constant.BotErrors;
 import ru.trusov.openai.telegrambot.constant.BotMessages;
 import ru.trusov.openai.telegrambot.constant.BotPrompts;
 import ru.trusov.openai.telegrambot.constant.BotSectionState;
@@ -17,6 +19,7 @@ import ru.trusov.openai.telegrambot.util.file.ConcurrencyLimiter;
 
 import java.text.MessageFormat;
 
+@Slf4j
 @Component
 @AllArgsConstructor
 public class ImageProcessor {
@@ -93,9 +96,14 @@ public class ImageProcessor {
         var userId = user.getId();
         var taskType = "image_generation";
         concurrencyLimiter.executeLimited(() -> {
-            messageSenderService.send(BotSectionState.STATE_REQUEST_IMAGE_SENT, chatId);
-            var url = imageService.generate(user.getSettingImage(), prompt);
-            messageSenderService.sendImageLink(url, chatId);
+            try {
+                messageSenderService.send(BotSectionState.STATE_REQUEST_IMAGE_SENT, chatId);
+                var url = imageService.generate(user.getSettingImage(), prompt);
+                messageSenderService.sendImageLink(url, chatId);
+            } catch (Exception e) {
+                log.error("Ошибка генерации изображения: chatId={}, userId={}, error={}", chatId, userId, e.getMessage(), e);
+                messageSenderService.send(BotErrors.ERROR_IMAGE_GENERATION_FAILED, chatId);
+            }
             return null;
         }, taskType, userId, chatId, msg -> messageSenderService.send(msg, chatId));
     }

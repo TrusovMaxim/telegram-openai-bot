@@ -37,6 +37,7 @@ public class TranslatorProcessor {
         } else {
             var taskType = "voice";
             var userId = user.getId();
+            messageSenderService.send(BotSectionState.STATE_REQUEST_SENT, chatId);
             concurrencyLimiter.executeLimited(() -> {
                 var responseText = translatorService.translate(user.getSettingTranslator(), voice.getFileId(), chatId);
                 messageSenderService.send(responseText, chatId);

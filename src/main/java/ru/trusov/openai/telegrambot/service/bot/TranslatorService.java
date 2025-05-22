@@ -7,6 +7,7 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.HttpEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 import ru.trusov.openai.telegrambot.constant.BotErrors;
 import ru.trusov.openai.telegrambot.model.enums.TranslatorTypeEnum;
@@ -52,7 +53,16 @@ public class TranslatorService {
             var headers = new HttpHeaders();
             headers.setContentType(MediaType.MULTIPART_FORM_DATA);
             var entity = new HttpEntity<>(map, headers);
-            var response = new RestTemplate().postForObject(resourceUrl, entity, WhisperTranslatorResponse.class);
+            WhisperTranslatorResponse response = null;
+            for (int attempt = 1; attempt <= 3; attempt++) {
+                try {
+                    response = new RestTemplate().postForObject(resourceUrl, entity, WhisperTranslatorResponse.class);
+                    break;
+                } catch (HttpServerErrorException e) {
+                    log.warn("Попытка {}: ошибка 500 от OpenAI. Повтор через {} мс", attempt, attempt * 1000);
+                    Thread.sleep(attempt * 1000);
+                }
+            }
             if (response == null || response.getText().isEmpty()) {
                 log.warn("Пустой ответ от OpenAI. type={}, fileId={}, chatId={}", type, fileId, chatId);
                 return BotErrors.ERROR_EMPTY_VOICE_MESSAGE;
