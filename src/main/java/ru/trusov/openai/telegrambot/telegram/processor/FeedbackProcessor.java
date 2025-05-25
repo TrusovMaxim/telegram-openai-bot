@@ -3,7 +3,6 @@ package ru.trusov.openai.telegrambot.telegram.processor;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 import ru.trusov.openai.telegrambot.constant.BotMessages;
-import ru.trusov.openai.telegrambot.constant.BotPrompts;
 import ru.trusov.openai.telegrambot.constant.BotSectionState;
 import ru.trusov.openai.telegrambot.model.entity.User;
 import ru.trusov.openai.telegrambot.model.enums.BotStateEnum;
@@ -59,6 +58,10 @@ public class FeedbackProcessor {
                 } else {
                     messageSenderService.send(BotSectionState.STATE_CHAT_SWITCHED_TO_IMAGE, chatId);
                 }
+            }
+            case FILE_SUMMARIZE -> {
+                userService.updateBotStateEnum(user, BotStateEnum.FILE_SUMMARIZE);
+                messageSenderService.send(BotSectionState.STATE_CHAT_SWITCHED_TO_FILE_SUMMARIZE, chatId);
             }
             case BALANCE -> messageSenderService.send(
                     MessageFormat.format(BotMessages.MESSAGE_IMAGE_BALANCE_CURRENT, user.getImageBalance()), chatId);

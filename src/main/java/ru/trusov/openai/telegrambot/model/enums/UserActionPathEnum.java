@@ -13,6 +13,7 @@ public enum UserActionPathEnum {
     TRANSLATOR("/translator"),
     YOUTUBE("/youtube"),
     IMAGE("/image"),
+    FILE_SUMMARIZE("/file_summarize"),
     SETTINGS("/settings"),
     BUY_IMAGES("/buy_images"),
     BALANCE("/balance"),

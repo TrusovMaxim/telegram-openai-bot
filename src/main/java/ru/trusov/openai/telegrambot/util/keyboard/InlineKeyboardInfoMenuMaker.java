@@ -18,10 +18,11 @@ public class InlineKeyboardInfoMenuMaker {
                         button("▶️ YouTube", "/youtube")
                 ),
                 List.of(
-                        button("📜 Команды", "/commands"),
-                        button("⚙️ Настройки", "/settings")
+                        button("📄 Файлы", "/file_summarize"),
+                        button("📜 Команды", "/commands")
                 ),
                 List.of(
+                        button("⚙️ Настройки", "/settings"),
                         button("🌟 Премиум", "/buy_premium")
                 )
         );

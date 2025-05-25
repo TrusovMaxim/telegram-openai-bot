@@ -8,9 +8,11 @@ import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.AnswerPreCheckoutQuery;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import ru.trusov.openai.telegrambot.constant.BotMessages;
+import ru.trusov.openai.telegrambot.model.enums.BotStateEnum;
 import ru.trusov.openai.telegrambot.service.bot.MessageSenderService;
 import ru.trusov.openai.telegrambot.service.user.UserService;
 import ru.trusov.openai.telegrambot.telegram.handler.CallbackQueryHandler;
+import ru.trusov.openai.telegrambot.telegram.handler.DocumentMessageHandler;
 import ru.trusov.openai.telegrambot.telegram.handler.TextMessageHandler;
 import ru.trusov.openai.telegrambot.telegram.handler.VoiceMessageHandler;
 
@@ -28,6 +30,7 @@ public class TelegramBotFacade extends TelegramLongPollingBot {
     private final String appTelegramBotUsername;
     private final String appTelegramBotToken;
     private final MessageSenderService messageSenderService;
+    private final DocumentMessageHandler documentMessageHandler;
 
     @PostConstruct
     public void init() {
@@ -79,6 +82,13 @@ public class TelegramBotFacade extends TelegramLongPollingBot {
                 textMessageHandler.handle(update, user);
             } else if (update.getMessage().hasVoice()) {
                 voiceMessageHandler.handle(update, user);
+            } else if (update.getMessage().hasDocument()) {
+                var userState = user.getBotStateEnum();
+                if (userState == BotStateEnum.FILE_SUMMARIZE) {
+                    documentMessageHandler.handle(update, user);
+                } else {
+                    textMessageHandler.sendUnsupported(chatId);
+                }
             } else {
                 textMessageHandler.sendUnsupported(chatId);
             }
