@@ -126,7 +126,7 @@ public class MessageSenderService {
     }
 
     public void sendImageInvoice(Long chatId) {
-        var prices = List.of(new LabeledPrice("5 генераций изображений", 149_00));
+        var prices = List.of(new LabeledPrice("5 генераций изображений", 199_00));
         var invoice = new SendInvoice();
         invoice.setChatId(chatId);
         invoice.setTitle("Токены для изображений");
