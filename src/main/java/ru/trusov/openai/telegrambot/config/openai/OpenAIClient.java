@@ -9,9 +9,15 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import ru.trusov.openai.telegrambot.config.telegram.ApplicationContextProvider;
+import ru.trusov.openai.telegrambot.constant.BotErrors;
+import ru.trusov.openai.telegrambot.constant.BotPrompts;
+import ru.trusov.openai.telegrambot.model.common.Message;
+import ru.trusov.openai.telegrambot.model.request.ChatGPTRequest;
+import ru.trusov.openai.telegrambot.service.openai.OpenAIClientApiService;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 @Slf4j
 @Getter
@@ -58,5 +64,26 @@ public class OpenAIClient {
                         }
                 );
         return response.toString();
+    }
+
+    public static String summarize(String text) {
+        try {
+            var prompt = BotPrompts.PROMPT_FILE_SUMMARIZE.formatted(text);
+            var message = Message.builder()
+                    .role("user")
+                    .content(prompt)
+                    .build();
+            var chatRequest = ChatGPTRequest.builder()
+                    .model("gpt-3.5-turbo")
+                    .messages(List.of(message))
+                    .build();
+            var response = ApplicationContextProvider.getContext()
+                    .getBean(OpenAIClientApiService.class)
+                    .chat(chatRequest);
+            return response.getChoiceResponses().getFirst().getMessage().getContent();
+        } catch (Exception e) {
+            log.error("Ошибка при получении резюме из OpenAI: {}", e.getMessage(), e);
+            return BotErrors.ERROR_FILE_PROCESSING_FAILED;
+        }
     }
 }

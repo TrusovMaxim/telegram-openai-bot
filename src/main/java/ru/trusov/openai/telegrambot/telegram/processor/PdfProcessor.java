@@ -1,48 +1,45 @@
 package ru.trusov.openai.telegrambot.telegram.processor;
 
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.stereotype.Component;
+import org.telegram.telegrambots.meta.api.objects.Document;
+import ru.trusov.openai.telegrambot.config.openai.OpenAIClient;
 import ru.trusov.openai.telegrambot.constant.*;
+import ru.trusov.openai.telegrambot.exception.TooManyPagesException;
 import ru.trusov.openai.telegrambot.model.entity.User;
 import ru.trusov.openai.telegrambot.model.enums.BotStateEnum;
 import ru.trusov.openai.telegrambot.model.enums.UserActionPathEnum;
 import ru.trusov.openai.telegrambot.service.bot.MessageSenderService;
-import ru.trusov.openai.telegrambot.service.openai.impl.OpenAIClientApiServiceImpl;
 import ru.trusov.openai.telegrambot.service.user.UserDataService;
 import ru.trusov.openai.telegrambot.service.user.UserService;
-import ru.trusov.openai.telegrambot.service.youtube.YoutubeSubtitleService;
 import ru.trusov.openai.telegrambot.util.file.ConcurrencyLimiter;
+import ru.trusov.openai.telegrambot.util.file.DownloadFileUtil;
+import ru.trusov.openai.telegrambot.util.file.GetUrlVoice;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.text.MessageFormat;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
-public class YoutubeProcessor {
+@AllArgsConstructor
+public class PdfProcessor {
     private final UserService userService;
     private final UserDataService userDataService;
     private final MessageSenderService messageSenderService;
-    private final YoutubeSubtitleService subtitleService;
-    private final OpenAIClientApiServiceImpl openAIClientApiService;
     private final ConcurrencyLimiter concurrencyLimiter;
 
-    public void process(User user, Long chatId, String text, UserActionPathEnum action) {
+    public void process(User user, Long chatId, UserActionPathEnum action) {
         if (action != null) {
             switchSection(user, chatId, action);
             return;
         }
-        if (!isValidYoutubeUrl(text)) {
-            messageSenderService.send(BotErrors.ERROR_YOUTUBE_INVALID_URL, chatId);
-            return;
-        }
-        if (!hasYoutubeQuota(user)) {
-            messageSenderService.send(BotWarnings.WARNING_YOUTUBE_LIMIT_REACHED, chatId);
-            return;
-        }
-        handleYoutubeUrl(user, chatId, text);
+        messageSenderService.send(BotErrors.ERROR_FILE_EXPECTED, chatId);
     }
 
     private void switchSection(User user, Long chatId, UserActionPathEnum action) {
@@ -64,7 +61,10 @@ public class YoutubeProcessor {
                     messageSenderService.send(BotSectionState.STATE_CHAT_SWITCHED_TO_TRANSLATOR, chatId);
                 }
             }
-            case YOUTUBE -> messageSenderService.send(BotSectionState.STATE_CHAT_ALREADY_IN_SECTION, chatId);
+            case YOUTUBE -> {
+                userService.updateBotStateEnum(user, BotStateEnum.YOUTUBE);
+                messageSenderService.send(BotSectionState.STATE_CHAT_SWITCHED_TO_YOUTUBE, chatId);
+            }
             case IMAGE -> {
                 userService.updateBotStateEnum(user, BotStateEnum.IMAGE);
                 if (user.getSettingImage() == null) {
@@ -73,17 +73,18 @@ public class YoutubeProcessor {
                     messageSenderService.send(BotSectionState.STATE_CHAT_SWITCHED_TO_IMAGE, chatId);
                 }
             }
-            case FILE_SUMMARIZE -> {
-                userService.updateBotStateEnum(user, BotStateEnum.FILE_SUMMARIZE);
-                messageSenderService.send(BotSectionState.STATE_CHAT_SWITCHED_TO_FILE_SUMMARIZE, chatId);
-            }
+            case FILE_SUMMARIZE -> messageSenderService.send(BotSectionState.STATE_CHAT_ALREADY_IN_SECTION, chatId);
+            case SETTINGS -> messageSenderService.sendSettingsMenu(chatId);
+            case BUY_IMAGES -> messageSenderService.sendImageInvoice(chatId);
             case BALANCE -> messageSenderService.send(
                     MessageFormat.format(BotMessages.MESSAGE_IMAGE_BALANCE_CURRENT, user.getImageBalance()), chatId);
+            case BUY_PREMIUM -> messageSenderService.sendPremiumInvoice(chatId);
             case INFO -> messageSenderService.sendInfoWithButtons(chatId);
             case FEEDBACK -> {
                 userService.updateBotStateEnum(user, BotStateEnum.FEEDBACK);
                 messageSenderService.send(BotPrompts.PROMPT_FEEDBACK_WRITE, chatId);
             }
+            case COMMANDS -> messageSenderService.sendCommandMenu(chatId);
             case SETTING_VOICE -> messageSenderService.sendTranslatorPrompt(chatId);
             case SETTING_IMAGE -> messageSenderService.sendImagePrompt(chatId);
             case DONATE -> messageSenderService.send(BotMessages.MESSAGE_DONATE_INFO, chatId);
@@ -91,58 +92,57 @@ public class YoutubeProcessor {
         }
     }
 
-    private boolean hasYoutubeQuota(User user) {
-        var now = LocalDate.now();
-        if (Boolean.TRUE.equals(user.getIsPremium()) &&
-                user.getPremiumEnd() != null &&
-                LocalDateTime.now().isBefore(user.getPremiumEnd())) {
-            return true;
-        }
-        if (user.getYoutubeUsageDate() == null || !user.getYoutubeUsageDate().isEqual(now)) {
-            return true;
-        }
-        return user.getYoutubeUsageToday() < 1;
-    }
-
-    private void incrementYoutubeUsageIfFree(User user) {
-        if (Boolean.TRUE.equals(user.getIsPremium()) &&
-                user.getPremiumEnd() != null &&
-                LocalDateTime.now().isBefore(user.getPremiumEnd())) {
+    public void handleFile(User user, Long chatId, Document doc) {
+        if (!"application/pdf".equals(doc.getMimeType())) {
+            messageSenderService.send(BotErrors.ERROR_FILE_EXPECTED, chatId);
             return;
         }
-        var now = LocalDate.now();
-        if (user.getYoutubeUsageDate() == null || !user.getYoutubeUsageDate().isEqual(now)) {
-            user.setYoutubeUsageDate(now);
-            user.setYoutubeUsageToday(1);
-            userService.save(user);
+        var isPremium = Boolean.TRUE.equals(user.getIsPremium()) &&
+                user.getPremiumEnd() != null &&
+                LocalDateTime.now().isBefore(user.getPremiumEnd());
+        if (!isPremium) {
+            messageSenderService.send(BotWarnings.WARNING_FILE_ONLY_FOR_PREMIUM, chatId);
+            return;
         }
-    }
-
-    public void handleYoutubeUrl(User user, Long chatId, String messageText) {
+        var taskType = "file_summarize";
         var userId = user.getId();
-        var taskType = "youtube";
         concurrencyLimiter.executeLimited(() -> {
+            Path path = null;
             try {
-                var url = messageText.replace("/youtube", "").trim();
-                messageSenderService.send(BotSectionState.STATE_YOUTUBE_SUBTITLE_LOADING, chatId);
-                var subtitles = subtitleService.extractSubtitles(url, chatId);
-                if (subtitles == null || subtitles.isBlank()) {
-                    messageSenderService.send(BotErrors.ERROR_YOUTUBE_SUBTITLE_NOT_FOUND, chatId);
-                    return null;
-                }
-                incrementYoutubeUsageIfFree(user);
-                messageSenderService.send(BotSectionState.STATE_YOUTUBE_SUMMARIZING, chatId);
-                var summary = openAIClientApiService.summarizeText(subtitles);
-                messageSenderService.send(summary, chatId);
+                messageSenderService.send(BotSectionState.STATE_FILE_PROCESSING, chatId);
+                var fileUrl = GetUrlVoice.getFileUrl(doc.getFileId());
+                var downloaded = DownloadFileUtil.download(fileUrl, chatId);
+                path = downloaded.toPath();
+                var rawText = extractText(path);
+                var summary = OpenAIClient.summarize(rawText);
+                messageSenderService.send(BotSectionState.STATE_FILE_SUMMARY_PREFIX + summary, chatId);
+            } catch (TooManyPagesException e) {
+                messageSenderService.send(BotErrors.ERROR_FILE_TOO_LARGE, chatId);
             } catch (Exception e) {
-                log.error("Ошибка при обработке YouTube-видео: {}", e.getMessage(), e);
-                messageSenderService.send(BotErrors.ERROR_YOUTUBE_PROCESSING, chatId);
+                log.error("Ошибка при обработке PDF: {}", e.getMessage(), e);
+                messageSenderService.send(BotErrors.ERROR_FILE_PROCESSING_FAILED, chatId);
+            } finally {
+                if (path != null) {
+                    try {
+                        Files.deleteIfExists(path);
+                    } catch (IOException e) {
+                        log.warn("Не удалось удалить временный PDF-файл: {}", e.getMessage());
+                    }
+                }
             }
             return null;
         }, taskType, userId, chatId, msg -> messageSenderService.send(msg, chatId));
     }
 
-    private boolean isValidYoutubeUrl(String url) {
-        return url != null && (url.contains("youtu.be/") || url.contains("youtube.com/watch?v="));
+    public static String extractText(Path path) {
+        try (var doc = PDDocument.load(path.toFile())) {
+            if (doc.getNumberOfPages() > 10) {
+                throw new TooManyPagesException("PDF слишком длинный");
+            }
+            var stripper = new PDFTextStripper();
+            return stripper.getText(doc);
+        } catch (Exception e) {
+            throw new RuntimeException("Не удалось прочитать PDF", e);
+        }
     }
 }

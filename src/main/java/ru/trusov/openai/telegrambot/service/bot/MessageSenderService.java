@@ -107,7 +107,7 @@ public class MessageSenderService {
     }
 
     public void sendPremiumInvoice(Long chatId) {
-        var prices = List.of(new LabeledPrice("Премиум-доступ на 1 месяц", 299_00));
+        var prices = List.of(new LabeledPrice("Премиум-доступ на 1 месяц", 399_00));
         var invoice = new SendInvoice();
         invoice.setChatId(chatId);
         invoice.setTitle("Премиум-доступ");

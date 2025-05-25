@@ -20,17 +20,18 @@ public class InlineKeyboardCommandMenuMaker {
         ));
         rows.add(List.of(
                 button("🖼 Изображения", "/image"),
-                button("💎 Купить токены", "/buy_images")
+                button("📄 Файлы", "/file_summarize")
         ));
         rows.add(List.of(
-                button("🧾 Баланс", "/balance"),
-                button("💡 О боте", "/info")
+                button("💎 Купить токены", "/buy_images"),
+                button("🧾 Баланс", "/balance")
         ));
         rows.add(List.of(
-                button("✍️ Отзыв", "/feedback"),
-                button("⚙️ Настройки", "/settings")
+                button("💡 О боте", "/info"),
+                button("✍️ Отзыв", "/feedback")
         ));
         rows.add(List.of(
+                button("⚙️ Настройки", "/settings"),
                 button("🌟 Премиум", "/buy_premium")
         ));
         return new InlineKeyboardMarkup(rows);

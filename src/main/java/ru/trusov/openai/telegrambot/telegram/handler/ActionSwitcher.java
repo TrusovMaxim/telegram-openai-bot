@@ -24,6 +24,7 @@ public class ActionSwitcher {
     private final YoutubeProcessor youtubeProcessor;
     private final MessageSenderService messageSenderService;
     private final UserService userService;
+    private final PdfProcessor pdfProcessor;
 
     public void route(User user, Long chatId, String text, UserActionPathEnum action) {
         if (action == null) {
@@ -33,6 +34,7 @@ public class ActionSwitcher {
                 case IMAGE -> imageProcessor.process(user, chatId, text, null);
                 case TRANSLATOR -> translatorProcessor.process(user, chatId, null);
                 case YOUTUBE -> youtubeProcessor.process(user, chatId, text, null);
+                case FILE_SUMMARIZE -> pdfProcessor.process(user, chatId, null);
                 case FEEDBACK -> feedbackProcessor.process(user, chatId, text, null);
             }
             return;
@@ -90,6 +92,7 @@ public class ActionSwitcher {
             case IMAGE -> imageProcessor.process(user, chatId, text, action);
             case TRANSLATOR -> translatorProcessor.process(user, chatId, action);
             case YOUTUBE -> youtubeProcessor.process(user, chatId, text, action);
+            case FILE_SUMMARIZE -> pdfProcessor.process(user, chatId, action);
             case FEEDBACK -> feedbackProcessor.process(user, chatId, text, action);
         }
     }

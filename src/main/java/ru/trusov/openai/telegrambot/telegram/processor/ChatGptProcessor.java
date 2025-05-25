@@ -61,6 +61,10 @@ public class ChatGptProcessor {
                     messageSenderService.send(BotSectionState.STATE_CHAT_SWITCHED_TO_IMAGE, chatId);
                 }
             }
+            case FILE_SUMMARIZE -> {
+                userService.updateBotStateEnum(user, BotStateEnum.FILE_SUMMARIZE);
+                messageSenderService.send(BotSectionState.STATE_CHAT_SWITCHED_TO_FILE_SUMMARIZE, chatId);
+            }
             case BALANCE -> messageSenderService.send(
                     MessageFormat.format(BotMessages.MESSAGE_IMAGE_BALANCE_CURRENT, user.getImageBalance()), chatId);
             case INFO -> messageSenderService.sendInfoWithButtons(chatId);
