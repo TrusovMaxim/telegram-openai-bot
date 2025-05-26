@@ -81,8 +81,8 @@ public class ActionSwitcher {
                 messageSenderService.send(BotMessages.MESSAGE_DONATE_INFO, chatId);
                 return;
             }
-            case ABOUT_AUTHOR -> {
-                messageSenderService.send(BotMessages.MESSAGE_ABOUT_AUTHOR, chatId);
+            case SUPPORT -> {
+                messageSenderService.send(BotMessages.MESSAGE_SUPPORT, chatId);
                 return;
             }
         }

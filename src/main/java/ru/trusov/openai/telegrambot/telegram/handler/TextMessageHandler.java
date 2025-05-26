@@ -48,6 +48,7 @@ public class TextMessageHandler {
             return;
         }
         if ("/commands".equalsIgnoreCase(text)) {
+            messageSenderService.sendWelcomeWithMenu(chatId);
             messageSenderService.sendCommandMenu(chatId);
             return;
         }

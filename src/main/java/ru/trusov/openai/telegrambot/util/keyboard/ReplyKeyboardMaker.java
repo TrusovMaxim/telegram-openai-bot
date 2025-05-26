@@ -12,7 +12,7 @@ public class ReplyKeyboardMaker {
     public ReplyKeyboardMarkup getMainMenuKeyboard() {
         var row = new KeyboardRow();
         row.add(new KeyboardButton(ButtonNameEnum.DONATE.getButtonName()));
-        row.add(new KeyboardButton(ButtonNameEnum.ABOUT.getButtonName()));
+        row.add(new KeyboardButton(ButtonNameEnum.SUPPORT.getButtonName()));
         var keyboard = new ArrayList<KeyboardRow>();
         keyboard.add(row);
         final var replyKeyboardMarkup = new ReplyKeyboardMarkup();

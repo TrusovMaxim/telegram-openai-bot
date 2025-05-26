@@ -75,7 +75,7 @@ public class StartProcessor {
             case SETTING_VOICE -> messageSenderService.sendTranslatorPrompt(chatId);
             case SETTING_IMAGE -> messageSenderService.sendImagePrompt(chatId);
             case DONATE -> messageSenderService.send(BotMessages.MESSAGE_DONATE_INFO, chatId);
-            case ABOUT_AUTHOR -> messageSenderService.send(BotMessages.MESSAGE_ABOUT_AUTHOR, chatId);
+            case SUPPORT -> messageSenderService.send(BotMessages.MESSAGE_SUPPORT, chatId);
         }
     }
 }
