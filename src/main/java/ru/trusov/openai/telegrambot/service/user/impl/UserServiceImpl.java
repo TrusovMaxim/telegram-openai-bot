@@ -9,8 +9,7 @@ import ru.trusov.openai.telegrambot.model.enums.TranslatorTypeEnum;
 import ru.trusov.openai.telegrambot.model.entity.User;
 import ru.trusov.openai.telegrambot.repository.UserRepository;
 import ru.trusov.openai.telegrambot.service.user.UserService;
-
-import java.util.Date;
+import ru.trusov.openai.telegrambot.util.time.TimeUtil;
 
 @Service
 @AllArgsConstructor
@@ -52,7 +51,7 @@ public class UserServiceImpl implements UserService {
         user.setFirstName(firstName);
         user.setLastName(lastName);
         user.setBotStateEnum(BotStateEnum.START);
-        user.setCurrentTime(new Date());
+        user.setCurrentTime(TimeUtil.nowInMoscow());
         userRepository.save(user);
     }
 

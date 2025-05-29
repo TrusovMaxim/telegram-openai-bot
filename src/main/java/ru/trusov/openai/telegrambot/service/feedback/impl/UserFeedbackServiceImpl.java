@@ -7,8 +7,7 @@ import ru.trusov.openai.telegrambot.model.entity.User;
 import ru.trusov.openai.telegrambot.model.entity.UserFeedback;
 import ru.trusov.openai.telegrambot.repository.UserFeedbackRepository;
 import ru.trusov.openai.telegrambot.service.feedback.UserFeedbackService;
-
-import java.util.Date;
+import ru.trusov.openai.telegrambot.util.time.TimeUtil;
 
 @Service
 @AllArgsConstructor
@@ -22,7 +21,7 @@ public class UserFeedbackServiceImpl implements UserFeedbackService {
         var userFeedback = new UserFeedback();
         userFeedback.setFeedback(feedback);
         userFeedback.setUser(user);
-        userFeedback.setCurrentTime(new Date());
+        userFeedback.setCurrentTime(TimeUtil.nowInMoscow());
         userFeedbackRepository.save(userFeedback);
     }
 }
