@@ -17,4 +17,6 @@ public interface UserService {
     void registerUser(String userName, String firstName, String lastName, Long chatId);
 
     void save(User user);
+
+    void notifyAllUsersAboutNewFeatures();
 }
