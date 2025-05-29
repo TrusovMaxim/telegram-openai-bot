@@ -67,8 +67,23 @@ public class MessageSenderService {
         try {
             telegramBot.execute(message);
         } catch (TelegramApiException e) {
-            log.error("Ошибка при отправке списка команд в чат {}: {}", chatId, e.getMessage(), e);
-            throw new RuntimeException("Не удалось отправить список команд", e);
+            log.error("Ошибка при отправке приветственного сообщения в чат {}: {}", chatId, e.getMessage(), e);
+            throw new RuntimeException("Не удалось отправить приветственное сообщение", e);
+        }
+    }
+
+    public void updateMainMenuButtons(Long chatId) {
+        var message = SendMessage.builder()
+                .chatId(chatId)
+                .text("⚙️ Меню обновлено — выберите нужный раздел ниже:")
+                .replyMarkup(new ReplyKeyboardMaker().getMainMenuKeyboard())
+                .build();
+        message.enableHtml(true);
+        try {
+            telegramBot.execute(message);
+        } catch (TelegramApiException e) {
+            log.error("Ошибка при обновлении клавиатуры в чат {}: {}", chatId, e.getMessage(), e);
+            throw new RuntimeException("Не удалось обновить клавиатуру", e);
         }
     }
 
