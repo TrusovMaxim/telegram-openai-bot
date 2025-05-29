@@ -18,7 +18,8 @@ public class ConcurrencyLimiter {
             "voice", new Semaphore(10, true),
             "youtube", new Semaphore(10, true),
             "image_generation", new Semaphore(10, true),
-            "file_summarize", new Semaphore(10, true)
+            "file_summarize", new Semaphore(10, true),
+            "video_note", new Semaphore(10, true)
     );
 
     public <T> T executeLimited(Supplier<T> task, String taskName, Long userId, Long chatId, Consumer<String> onWaitMessage) {

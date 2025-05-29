@@ -1,0 +1,13 @@
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.3.xsd">
+
+    <changeSet id="20250529-add-video-note-usage-fields" author="TrusovMaxim">
+        <addColumn tableName="user_bot">
+            <column name="video_note_usage_today" type="int" defaultValueNumeric="0"/>
+            <column name="video_note_usage_date" type="date"/>
+        </addColumn>
+    </changeSet>
+
+</databaseChangeLog>

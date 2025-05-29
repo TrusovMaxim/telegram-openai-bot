@@ -9,4 +9,5 @@
     <include file="/db/changelog/changesets/20250514-add-image-balance-column.xml"/>
     <include file="/db/changelog/changesets/20250514-add-premium-fields.xml"/>
     <include file="/db/changelog/changesets/20250514-add-gpt-usage-limits.xml"/>
+    <include file="/db/changelog/changesets/20250529-add-video-note-usage-fields.xml"/>
 </databaseChangeLog>

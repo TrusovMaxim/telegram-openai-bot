@@ -56,6 +56,10 @@ public class User {
     private Integer youtubeUsageToday;
     @Column(name = "youtube_usage_date")
     private LocalDate youtubeUsageDate;
+    @Column(name = "video_note_usage_today")
+    private Integer videoNoteUsageToday;
+    @Column(name = "video_note_usage_date")
+    private LocalDate videoNoteUsageDate;
 
     public User(Long chatId) {
         this.chatId = chatId;

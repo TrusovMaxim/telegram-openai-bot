@@ -2,6 +2,7 @@ package ru.trusov.openai.telegrambot.telegram.processor;
 
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.telegram.telegrambots.meta.api.objects.VideoNote;
 import org.telegram.telegrambots.meta.api.objects.Voice;
 import ru.trusov.openai.telegrambot.constant.BotErrors;
 import ru.trusov.openai.telegrambot.constant.BotMessages;
@@ -40,6 +41,21 @@ public class TranslatorProcessor {
             messageSenderService.send(BotSectionState.STATE_REQUEST_SENT, chatId);
             concurrencyLimiter.executeLimited(() -> {
                 var responseText = translatorService.translate(user.getSettingTranslator(), voice.getFileId(), chatId);
+                messageSenderService.send(responseText, chatId);
+                return null;
+            }, taskType, userId, chatId, msg -> messageSenderService.send(msg, chatId));
+        }
+    }
+
+    public void processVideoNote(User user, VideoNote videoNote, Long chatId) {
+        if (videoNote.getDuration() > 300) {
+            messageSenderService.send(BotErrors.ERROR_VIDEO_NOTE_TOO_LONG, chatId);
+        } else {
+            var taskType = "video_note";
+            var userId = user.getId();
+            messageSenderService.send(BotSectionState.STATE_REQUEST_SENT, chatId);
+            concurrencyLimiter.executeLimited(() -> {
+                var responseText = translatorService.transcribeVideoNote(videoNote.getFileId(), chatId);
                 messageSenderService.send(responseText, chatId);
                 return null;
             }, taskType, userId, chatId, msg -> messageSenderService.send(msg, chatId));

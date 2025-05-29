@@ -82,6 +82,8 @@ public class TelegramBotFacade extends TelegramLongPollingBot {
                 textMessageHandler.handle(update, user);
             } else if (update.getMessage().hasVoice()) {
                 voiceMessageHandler.handle(update, user);
+            } else if (update.getMessage().hasVideoNote()) {
+                voiceMessageHandler.handleVideoNote(update, user);
             } else if (update.getMessage().hasDocument()) {
                 var userState = user.getBotStateEnum();
                 if (userState == BotStateEnum.FILE_SUMMARIZE) {
