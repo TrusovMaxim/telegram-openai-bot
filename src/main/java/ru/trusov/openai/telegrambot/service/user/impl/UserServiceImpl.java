@@ -63,6 +63,9 @@ public class UserServiceImpl implements UserService {
         user.setLastName(lastName);
         user.setBotStateEnum(BotStateEnum.START);
         user.setCurrentTime(TimeUtil.nowInMoscow());
+        user.setVoiceUsageToday(0);
+        user.setVideoNoteUsageToday(0);
+        user.setYoutubeUsageToday(0);
         userRepository.save(user);
     }
 
