@@ -14,6 +14,7 @@ import ru.trusov.openai.telegrambot.telegram.processor.TranslatorProcessor;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 @Component
 @AllArgsConstructor
@@ -78,11 +79,12 @@ public class VoiceMessageHandler {
             params.dateSetter().accept(today);
             params.counterSetter().accept(0);
         }
-        if (params.counterGetter().get() >= params.limit()) {
+        int currentCount = Objects.requireNonNullElse(params.counterGetter().get(), 0);
+        if (currentCount >= params.limit()) {
             messageSenderService.send(params.warningMessage(), params.chatId());
             return false;
         }
-        params.counterSetter().accept(params.counterGetter().get() + 1);
+        params.counterSetter().accept(currentCount + 1);
         return true;
     }
 }
