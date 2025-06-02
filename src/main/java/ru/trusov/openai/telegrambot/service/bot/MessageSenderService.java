@@ -123,6 +123,23 @@ public class MessageSenderService {
 
     public void sendPremiumInvoice(Long chatId) {
         var prices = List.of(new LabeledPrice("Премиум-доступ на 1 месяц", 399_00));
+        var providerData = """
+                {
+                  "receipt": {
+                    "items": [
+                      {
+                        "description": "Премиум-доступ на 1 месяц",
+                        "quantity": 1,
+                        "amount": {
+                          "value": 399.00,
+                          "currency": "RUB"
+                        },
+                        "vat_code": 1
+                      }
+                    ]
+                  }
+                }
+                """;
         var invoice = new SendInvoice();
         invoice.setChatId(chatId);
         invoice.setTitle("Премиум-доступ");
@@ -134,6 +151,7 @@ public class MessageSenderService {
         invoice.setStartParameter("premium");
         invoice.setNeedEmail(true);
         invoice.setSendEmailToProvider(true);
+        invoice.setProviderData(providerData);
         try {
             telegramBot.execute(invoice);
         } catch (TelegramApiException e) {
@@ -144,6 +162,23 @@ public class MessageSenderService {
 
     public void sendImageInvoice(Long chatId) {
         var prices = List.of(new LabeledPrice("5 генераций изображений", 199_00));
+        var providerData = """
+                {
+                  "receipt": {
+                    "items": [
+                      {
+                        "description": "5 генераций изображений",
+                        "quantity": 1,
+                        "amount": {
+                          "value": 199.00,
+                          "currency": "RUB"
+                        },
+                        "vat_code": 1
+                      }
+                    ]
+                  }
+                }
+                """;
         var invoice = new SendInvoice();
         invoice.setChatId(chatId);
         invoice.setTitle("Токены для изображений");
@@ -155,6 +190,7 @@ public class MessageSenderService {
         invoice.setStartParameter("buy_images");
         invoice.setNeedEmail(true);
         invoice.setSendEmailToProvider(true);
+        invoice.setProviderData(providerData);
         try {
             telegramBot.execute(invoice);
         } catch (TelegramApiException e) {
