@@ -132,6 +132,8 @@ public class MessageSenderService {
         invoice.setCurrency("RUB");
         invoice.setPrices(prices);
         invoice.setStartParameter("premium");
+        invoice.setNeedEmail(true);
+        invoice.setSendEmailToProvider(true);
         try {
             telegramBot.execute(invoice);
         } catch (TelegramApiException e) {
@@ -151,6 +153,8 @@ public class MessageSenderService {
         invoice.setCurrency("RUB");
         invoice.setPrices(prices);
         invoice.setStartParameter("buy_images");
+        invoice.setNeedEmail(true);
+        invoice.setSendEmailToProvider(true);
         try {
             telegramBot.execute(invoice);
         } catch (TelegramApiException e) {
