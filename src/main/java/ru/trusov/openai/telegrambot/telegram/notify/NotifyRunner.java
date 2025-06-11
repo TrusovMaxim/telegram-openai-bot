@@ -12,6 +12,6 @@ public class NotifyRunner implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-//        userService.notifyAllUsersAboutNewFeatures();
+        userService.notifyAllUsersAboutNewFeatures();
     }
 }

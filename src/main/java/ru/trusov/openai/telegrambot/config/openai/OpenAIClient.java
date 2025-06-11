@@ -74,7 +74,7 @@ public class OpenAIClient {
                     .content(prompt)
                     .build();
             var chatRequest = ChatGPTRequest.builder()
-                    .model("gpt-3.5-turbo")
+                    .model("gpt-4o-mini")
                     .messages(List.of(message))
                     .build();
             var response = ApplicationContextProvider.getContext()
