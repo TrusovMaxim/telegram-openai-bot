@@ -11,10 +11,7 @@ import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.payments.LabeledPrice;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import ru.trusov.openai.telegrambot.constant.BotErrors;
-import ru.trusov.openai.telegrambot.constant.BotMessages;
-import ru.trusov.openai.telegrambot.constant.BotSectionState;
-import ru.trusov.openai.telegrambot.constant.BotTemplates;
+import ru.trusov.openai.telegrambot.constant.*;
 import ru.trusov.openai.telegrambot.util.keyboard.*;
 
 import java.text.MessageFormat;
@@ -27,19 +24,36 @@ public class MessageSenderService {
     private TelegramLongPollingBot telegramBot;
     @Value("${telegram.payment.provider-token}")
     private String providerToken;
+    private static final int TELEGRAM_MAX_MESSAGE_LENGTH = 4000;
 
     public void send(String text, Long chatId) {
         try {
-            var message = SendMessage.builder()
-                    .chatId(chatId)
-                    .text(text)
-                    .build();
-            message.enableHtml(true);
-            telegramBot.execute(message);
+            if (text.length() <= TELEGRAM_MAX_MESSAGE_LENGTH) {
+                sendPart(chatId, text);
+                return;
+            }
+            var totalParts = (int) Math.ceil((double) text.length() / TELEGRAM_MAX_MESSAGE_LENGTH);
+            var warning = String.format(BotWarnings.WARNING_LONG_RESPONSE_PREFIX, totalParts);
+            sendPart(chatId, warning);
+            for (int i = 0; i < text.length(); i += TELEGRAM_MAX_MESSAGE_LENGTH) {
+                var partNumber = i / TELEGRAM_MAX_MESSAGE_LENGTH + 1;
+                var partText = text.substring(i, Math.min(i + TELEGRAM_MAX_MESSAGE_LENGTH, text.length()));
+                var labeledPart = "🔹 (" + partNumber + "/" + totalParts + ")\n" + partText;
+                sendPart(chatId, labeledPart);
+            }
         } catch (TelegramApiException e) {
             log.error("Ошибка при отправке сообщения в чат {}: {}", chatId, e.getMessage(), e);
             throw new RuntimeException("Не удалось отправить сообщение", e);
         }
+    }
+
+    private void sendPart(Long chatId, String text) throws TelegramApiException {
+        var message = SendMessage.builder()
+                .chatId(chatId)
+                .text(text)
+                .build();
+        message.enableHtml(true);
+        telegramBot.execute(message);
     }
 
     public void edit(String text, Long chatId, Integer messageId) {
